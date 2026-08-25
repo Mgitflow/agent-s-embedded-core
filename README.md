@@ -153,6 +153,7 @@ python scripts/build_flash.py "点灯" --no-flash   # 只编译，不烧录
 - `arm-none-eabi-gcc`（STM32CubeIDE 自带，或 GNU Arm Embedded Toolchain）
 - `STM32Cube_FW_F4` HAL 库（st.com 免费下载）
 - `STM32_Programmer_CLI`（STM32CubeProgrammer，st.com 免费下载）
+- ST 参考手册（RM0090）/ 数据手册（st.com 免费下载，填完整芯片肖像时查引脚表、时钟树、外设寄存器）
 
 脚本自动探测这些工具，也可用环境变量覆盖：`AGENT_S_ARM_GCC` / `STM32_CUBE_FW` / `STM32_PROGRAMMER_CLI`。
 没工具链 / 没板子也能跑「生成」这一步，编译 / 烧录会明确提示缺什么、跳过什么，不静默失败。
@@ -182,3 +183,13 @@ python scripts/build_flash.py "点灯" --no-flash   # 只编译，不烧录
 2. **血肉 = 材料，骨架 = 编排**：代码只定义「推理框架 / 编排流程」，具体内容全由材料（JSON/YAML）驱动。加能力 = 加材料 + 新实现，不改骨架。
 
 详见 `docs/ARCHITECTURE.md`。
+
+## 关于作者
+
+**大一 · 专科 · 集成电路方向，零基础自学嵌入式。**
+
+这是作者的**第一个项目**——不是成熟的成品，而是从零起步、一步步摸索出来的**第一版框架**。从「让板子亮起来」到「把代码生成这件事想清楚、搭出来」，这条路都凝在这个骨架里。
+
+它有很多不完善的地方，这是事实，也正是它被设计成**成长性项目**的原因：作者给的是下限（确定性骨架 + 106 校验 + 真编译），上限取决于每一个用它、改它的人。
+
+如果你也在这条路上，欢迎一起把它变得更好。
