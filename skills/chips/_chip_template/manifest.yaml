@@ -1,0 +1,39 @@
+# ── 芯片包示意模板（占位，请按此格式填真实芯片）──
+# 一份芯片肖像 = 一个目录，目录名 = 芯片名（如 stm32f407zgt6）。
+# 字段说明见 docs/DATA_SPEC.md；此处是「空模板」，值均为占位示例。
+
+name: _example_chip
+display_name: "示例芯片"
+vendor: "厂商（系列）"
+type: chip
+model_segment: "型号段"
+version: "0.0.0"
+requires_agent_s: ">=0.0.0"
+inherits: ["_common", "_series_xxx"]   # 继承公共层与系列层，只覆盖芯片特定参数
+layer: 3
+
+chip:
+  family: F4                    # 系列（F1/F4/G4…），决定 HAL 前缀与时钟基准
+  core: Cortex-M4F              # 内核
+  max_clock_mhz: 168            # 最高主频（MHz）
+  flash_kb: 1024                # Flash 容量（KB）
+  ram_kb: 128                   # SRAM 容量（KB）
+  ccm_kb: 64                    # CCM RAM（KB，无则 0）
+  package: LQFP144              # 封装（决定引脚范围）
+  has_fpu: true                 # 是否带 FPU
+  has_dsp: true                 # 是否带 DSP 指令
+  voltage: "1.8-3.6V"           # 供电范围
+
+hal:
+  library: STM32Cube_FW_F4      # HAL 库名（决定工具链/源文件前缀）
+  version: "1.28.3"             # HAL 库版本
+  reference_manual: RM0090      # 参考手册编号（引脚/外设权威来源）
+
+peripherals:
+  supported: [GPIO, TIM, UART, SPI, I2C, ADC, DAC, DMA, RTC]   # 支持的外设
+  gpio_ports: [A, B, C, D, E, F, G]                             # 可用 GPIO 端口
+
+files:
+  profile: profile.json         # 芯片画像（时钟树/引脚/AF/特殊引脚/DMA）
+  pin_map: pin_map.json         # 引脚映射（封装 → 每引脚复用信号）
+  af_map: af_map.json           # 复用功能映射（信号 → 引脚 + AF 编号 + 默认引脚）

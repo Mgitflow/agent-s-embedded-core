@@ -1,0 +1,33 @@
+{
+  "schema_version": "1.0",
+  "paradigm": "stm32",
+  "description": "外设中断 handler 标准（范式级：STM32 HAL 全系列通用，F1/F4/G4 写法一致）。加新外设中断 = 在这里加一条，不改生成代码。ESP32 范式另立。",
+  "handlers": {
+    "USART": {
+      "hal_call": "HAL_UART_IRQHandler(&{handle});",
+      "handle_type": "UART_HandleTypeDef",
+      "handle_re": "HAL_UART_Init\\(&(\\w+)\\)",
+      "note": "USART 中断走 HAL_UART_IRQHandler（UART/USART 共用 HAL 驱动）"
+    },
+    "TIM": {
+      "hal_call": "HAL_TIM_IRQHandler(&{handle});",
+      "handle_type": "TIM_HandleTypeDef",
+      "handle_re": "HAL_TIM_(?:Base_|IC_|OC_|PWM_)?Init\\(&(\\w+)\\)"
+    },
+    "CAN": {
+      "hal_call": "HAL_CAN_IRQHandler(&{handle});",
+      "handle_type": "CAN_HandleTypeDef",
+      "handle_re": "HAL_CAN_Init\\(&(\\w+)\\)"
+    },
+    "WWDG": {
+      "hal_call": "HAL_WWDG_IRQHandler(&{handle});",
+      "handle_type": "WWDG_HandleTypeDef",
+      "handle_re": "HAL_WWDG_Init\\(&(\\w+)\\)"
+    },
+    "EXTI": {
+      "hal_call": "HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_{line});",
+      "line_re": "EXTI(\\d+)_IRQn",
+      "note": "EXTI 无 handle，用线号 GPIO_PIN_n"
+    }
+  }
+}
