@@ -52,6 +52,43 @@
 | 血肉格式说明 + 空模板 | 测试脚本（无血肉，测试无意义） |
 | 骨架自检脚本 | 上板验证的完整数据 |
 
+## 如何「填肉」（扩展指南）
+
+骨架是空车，**支持新芯片 / 新外设 = 加材料，不改代码**。
+
+### 加一颗芯片
+
+在 `skills/chips/` 下建目录（如 `stm32f407xx/`），放四个文件：
+
+| 文件 | 作用 |
+|---|---|
+| `manifest.yaml` | 芯片族 / 内核 / 主频 / HAL 库名 |
+| `profile.json` | 芯片画像（RAM/Flash、时钟树、外设能力） |
+| `pin_map.json` | 引脚映射（如 `PA5` → GPIO） |
+| `af_map.json` | 复用功能映射（如 `USART1_TX` → `PA9`） |
+
+字段格式见 `skills/chips/_chip_template/`（空模板 + 注释）和 `docs/DATA_SPEC.md`。
+可参考 `skills/chips/stm32f407zgt6/`（最小示例肖像，只含点灯字段）。
+
+### 加一个外设模板
+
+在 `knowledge/template_forge/forge_templates/functional/` 下建一个 JSON：
+
+```json
+{
+  "id": "my_led",
+  "keywords": ["点灯", "led", "闪灯"],
+  "peripheral": "GPIO",
+  "init": "  /* 初始化代码 */",
+  "loop": "  /* 主循环（可选） */",
+  "deinit": ""
+}
+```
+
+`keywords` 用于识别，`init / loop / deinit` 是代码块。格式见 `_example.json` 和 `TEMPLATE_SPEC.md`。
+
+填完后 `python examples/run_example.py` 就能识别你的新词、生成你的新代码。
+
 ## 仓库结构
 
 ```
@@ -69,7 +106,7 @@ agent-s-embedded-core/
 │   ├── chips/_chip_template/     空芯片包（manifest + profile 字段说明）
 │   └── boards/_board_template/   空开发板（board.json 字段说明）
 ├── src/
-│   ├── api/              唯一入口（server + 门卫）
+│   ├── api/              智能层（LLM）入口 —— 开源仓仅接口参考，import 需从原项目补（见「现状与已知边界」）
 │   └── studio/           骨架五件套（skill/context/registry/result/workspace）
 ├── examples/
 │   └── run_example.py    最小可运行示例（文字 → 完整工程）
@@ -126,7 +163,7 @@ python scripts/build_flash.py "点灯" --no-flash   # 只编译，不烧录
 | 项 | 现状 | 说明 |
 |---|---|---|
 | 完整生成 | 需完整芯片肖像 | 示例只给「stm32f407 最小肖像」（仅点灯字段），完整引脚/外设是护城河，需自己填 |
-| server 入口 | 依赖智能层 | `src/api/server.py` 是智能层（LLM）入口，开源仓不含智能层，需从原项目补 |
+| server 入口 | 依赖智能层 | `src/api/server.py` import 会失败（依赖已剥离的 `src.deps.assembly`），开源仓仅接口参考，需从原项目补智能层 |
 | `functional_assembler.py` | 836 行待拆分 | 已知超大文件，拆分在计划中（不影响使用） |
 | 异常处理 | 有意 fail-closed | 大量 `except Exception` 是「兜底设计」非偷懒，多数带注释说明 |
 
