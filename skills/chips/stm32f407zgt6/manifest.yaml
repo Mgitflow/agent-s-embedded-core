@@ -1,6 +1,6 @@
-name: example_chip
-display_name: "示例芯片（最小可运行示例）"
-vendor: "示例（非真实芯片）"
+name: stm32f407zgt6
+display_name: "STM32F407ZGT6（最小示例肖像）"
+vendor: "STMicroelectronics (STM32F4 系列)"
 type: chip
 layer: 3
 
@@ -8,17 +8,17 @@ chip:
   family: F4
   core: Cortex-M4F
   max_clock_mhz: 168
-  flash_kb: 512
+  flash_kb: 1024
   ram_kb: 128
-  ccm_kb: 0
-  package: 示例
+  ccm_kb: 64
+  package: LQFP144
   has_fpu: true
   has_dsp: true
 
 hal:
   library: STM32Cube_FW_F4
   version: "1.28.3"
-  reference_manual: "示例（非真实手册）"
+  reference_manual: RM0090
 
 files:
   profile: profile.json

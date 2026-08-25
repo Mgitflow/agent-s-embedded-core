@@ -1,0 +1,1 @@
+{"meta": {"chip": "STM32F407ZGT6", "family": "F4", "core": "Cortex-M4F", "package": "LQFP144", "max_clock_mhz": 168, "flash_kb": 1024, "ram_kb": 128, "ccm_kb": 64}, "capabilities": {"gpio_ports": ["A"]}, "clock_tree": {"hse_hz": 8000000, "sysclk_hz": 168000000, "hclk_hz": 168000000, "apb1_hz": 42000000, "apb2_hz": 84000000}, "pin_map": {}, "af_map": {}}

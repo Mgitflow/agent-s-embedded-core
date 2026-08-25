@@ -1,0 +1,1 @@
+{"schema_version": "1.0", "chip": "stm32f407zgt6", "package": "LQFP144", "comment": "最小示例肖像：仅点灯需要的 GPIO，非完整 407 引脚", "pins": {"PA5": {"functions": ["GPIO"], "special": "", "adc": [], "dac": [], "ft": true, "notes": "示例 GPIO 引脚（仅演示用）"}}}

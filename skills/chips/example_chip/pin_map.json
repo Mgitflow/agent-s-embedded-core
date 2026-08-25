@@ -1,1 +1,0 @@
-{"schema_version": "1.0", "chip": "example_chip", "package": "示例", "comment": "最小示例芯片：仅演示文字→生成链路，非真实芯片", "pins": {"PA5": {"functions": ["GPIO"], "special": "", "adc": [], "dac": [], "ft": true, "notes": "示例 GPIO 引脚"}}}
