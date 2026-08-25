@@ -1,13 +1,13 @@
 """骨架自检（self_check）——验证「空车能开」的骨架部分。
 
-开源仓库不夹带血肉（芯片肖像/功能模板/手册数据），本自检只测**不依赖血肉**的骨架：
+开源仓库不夹带内容（芯片肖像/功能模板/手册数据），本自检只测**不依赖内容**的骨架：
   1. 契约结构完整（CodeSkillOutput 字段）
   2. 校验规则数（确定性骨架的工艺标准，应为 106 条）
   3. 核心模块可 import（契约 / 校验 / 编排 / 编译 / 生成器全链）
-  4. 接口契约存在（抽象接口，血肉由此接入）
+  4. 接口契约存在（抽象接口，内容由此接入）
   5. assemble_routed 空车跑通（骨架能优雅降级，不 KeyError）
 
-「完整文字 → 生成 → 编译」验证需要血肉数据，见 docs/VERIFICATION.md。
+「完整文字 → 生成 → 编译」验证需要内容数据，见 docs/VERIFICATION.md。
 
 用法：python scripts/self_check.py
 """
@@ -118,7 +118,7 @@ def main() -> int:
         mark = "PASS" if ok else "FAIL"
         print(f"  [{mark}] {name}: {detail}")
     if passed == len(_results):
-        print("\n空车能开：骨架完整可 import、可跑通、缺血肉时优雅降级。")
+        print("\n空车能开：骨架完整可 import、可跑通、缺内容时优雅降级。")
         print("填入真实芯片包 + 功能模板即可复现完整生成（见 docs/VERIFICATION.md）。")
     return 0 if passed == len(_results) else 1
 

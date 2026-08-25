@@ -1,7 +1,7 @@
 # 验证方法（VERIFICATION）
 
-> 回答「怎么证明这套骨架是对的」。分两层：**骨架自检**（不依赖血肉，空车能开）+
-> **完整生成验证**（填入血肉，文字 → 编译 → 上板）。开源只带第一层，第二层给方法 + 接口。
+> 回答「怎么证明这套骨架是对的」。分两层：**骨架自检**（不依赖内容，空车能开）+
+> **完整生成验证**（填入内容，文字 → 编译 → 上板）。开源只带第一层，第二层给方法 + 接口。
 
 ---
 
@@ -19,17 +19,17 @@ python scripts/self_check.py
 | 校验规则 | 106 条外设校验规则齐全 | PASS |
 | 核心模块 import | 23 个核心模块可 import | PASS |
 | 接口契约 | 抽象接口 20 个 | PASS |
-| assemble_routed 空车跑通 | 缺血肉时优雅降级，不崩溃 | PASS |
+| assemble_routed 空车跑通 | 缺内容时优雅降级，不崩溃 | PASS |
 
-**自检边界**：只测「不依赖血肉」的骨架（契约 / 规则 / 编排逻辑 / 接口）。
-完整生成需要血肉数据，见下。
+**自检边界**：只测「不依赖内容」的骨架（契约 / 规则 / 编排逻辑 / 接口）。
+完整生成需要内容数据，见下。
 
-## 二、完整生成验证（需要血肉数据）
+## 二、完整生成验证（需要内容数据）
 
 填入真实芯片包 + 功能模板后，复现「文字 → 生成 → 编译」：
 
 ```bash
-# 1. 放血肉：把真实芯片包放到 skills/chips/<chip>/，功能模板放到 forge_templates/
+# 1. 放内容：把真实芯片包放到 skills/chips/<chip>/，功能模板放到 forge_templates/
 # 2. 文字生成（骨架入口）
 python -c "from knowledge.template_forge.functional_assembler import FunctionalAssembler; \
            r = FunctionalAssembler().assemble_routed('点灯', chip='stm32f407zgt6')"
@@ -51,7 +51,7 @@ python scripts/compile_check.py --text "点灯" --chip stm32f407zgt6
 
 ## 四、空车能开的「降级待办」
 
-当前骨架在**无血肉数据**时，`infrastructure/config.py` 模块级调用 `chip_gateway.default_chip()`
+当前骨架在**无内容数据**时，`infrastructure/config.py` 模块级调用 `chip_gateway.default_chip()`
 扫芯片目录，空仓扫不到芯片 → `KeyError 'STM32F4xx'`。影响范围：
 
 - `infrastructure/config.py` / `chip_gateway.py` / `chip_family.py` / `board_resolver.py`

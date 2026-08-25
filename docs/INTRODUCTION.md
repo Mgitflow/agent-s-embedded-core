@@ -22,8 +22,8 @@
 
 ## 三、为什么这么设计（三个决策）
 
-**① 骨架 ≠ 血肉（材料驱动）**：代码只定义「怎么编」，不定义「编什么」。芯片肖像、功能模板、
-手册数据都是「材料」（JSON/YAML），加能力 = 加材料，不改骨架。所以本仓开源骨架、留血肉示意。
+**① 骨架 ≠ 内容（材料驱动）**：代码只定义「怎么编」，不定义「编什么」。芯片肖像、功能模板、
+手册数据都是「材料」（JSON/YAML），加能力 = 加材料，不改骨架。所以本仓开源骨架、留内容示意。
 
 **② 开发板与芯片并列（不是包含）**：芯片肖像给「芯片默认引脚」（CubeMX 抠），开发板给
 「板载定型引脚」（正点原子 BSP 抠），井水不犯河水。血泪教训：板子定型 init 必须「直接套用、
@@ -68,13 +68,13 @@ void MX_GPIO_Init(void)
 ## 五、怎么用（三步）
 
 ```bash
-# 1. 自检（空车能开，不依赖血肉）
+# 1. 自检（空车能开，不依赖内容）
 python scripts/self_check.py        # 5/5 通过
 
-# 2. 填血肉（最小原型，见各 _chip_template / _example 的 README）
+# 2. 填内容（最小原型，见各 _chip_template / _example 的 README）
 #    把真实芯片肖像放 skills/chips/<chip>/，功能模板放 forge_templates/<name>.json
 
-# 3. 生成（骨架入口，填了血肉就能跑）
+# 3. 生成（骨架入口，填了内容就能跑）
 python -c "from knowledge.template_forge.functional_assembler import FunctionalAssembler; \
            print(FunctionalAssembler().assemble_routed('点灯', chip='stm32f407zgt6'))"
 ```
@@ -82,12 +82,12 @@ python -c "from knowledge.template_forge.functional_assembler import FunctionalA
 ## 六、仓库地图
 
 ```
-contracts/     契约层（数据类 + 抽象接口，血肉由此接入）
+contracts/     契约层（数据类 + 抽象接口，内容由此接入）
 engine/        编排 + 106 校验规则 + 编译流水线
 infrastructure/ 配置 / 芯片族 / 编译 / 引脚解析
 knowledge/template_forge/   模板锻造编排（识别 → 组装 → 切片，纯代码）
 knowledge/loaders/          CubeMX 数据生成器（抠引脚 / 重映射）
-skills/chips|boards/        血肉最小原型（空模板 + 字段说明）
+skills/chips|boards/        内容最小原型（空模板 + 字段说明）
 src/api + src/studio        入口 + 骨架五件套
 scripts/self_check.py       骨架自检
 docs/                       架构 / 格式 / 验证 / 本介绍

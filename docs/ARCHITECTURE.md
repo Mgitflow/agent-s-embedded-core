@@ -30,7 +30,7 @@
 
 ## 各层职责
 
-| 层 | 模块 | 职责 | 依赖血肉？ |
+| 层 | 模块 | 职责 | 依赖内容？ |
 |---|---|---|---|
 | 契约层 | `contracts/` | 数据类（CodeSkillOutput）+ 抽象接口 | 否 |
 | 校验层 | `engine/validators/` | 106 条外设校验规则（工艺标准） | 否 |
@@ -53,20 +53,20 @@
 
 血泪教训（原项目上板回归）：板子定型 init 必须「直接套用、不重新渲染」，否则芯片默认引脚会覆盖定型引脚，编译过但上板读不出数。
 
-### 2. 血肉 = 材料，骨架 = 编排
+### 2. 内容即材料，骨架 = 编排
 
 - 接口 = 抽象协议（Protocol / 抽象基类 / schema），实现可替换。
 - 数据 / 知识 / 经验 = 材料（json / yaml），不写死在代码里。
 - 加能力 = 加材料 + 新实现，不改推理 / 编排骨架。
 
-## 关键接口（血肉接入点）
+## 关键接口（内容接入点）
 
-| 入口 | 抽象接口 | 血肉接入方式 |
+| 入口 | 抽象接口 | 内容接入方式 |
 |---|---|---|
 | 芯片扫描 | `infrastructure/chip_gateway.py` | 扫 `skills/chips/*/` 目录，自动注册芯片肖像 |
 | 引脚分配 | `knowledge/template_forge/chip_portrait_adapter.py` | 读 `profile.json` 的 `pin_map` / `af_map` |
 | 模板加载 | `knowledge/template_forge/functional_templates.py` | 读 `forge_templates/*.json` |
 | 开发板解析 | `infrastructure/board_resolver.py` | 读 `skills/boards/*/board.json` |
 
-> 这些入口默认走「示意模板」，拿到真实血肉后**不改代码**即可替换——即「做好随时替换的准备」。
+> 这些入口默认走「示意模板」，拿到真实内容后**不改代码**即可替换——即「做好随时替换的准备」。
 > 完整字段格式见 `docs/DATA_SPEC.md`。
