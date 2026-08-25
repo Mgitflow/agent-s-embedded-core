@@ -130,14 +130,17 @@ python scripts/self_check.py
 
 预期输出 `5/5 通过`（契约结构 / 106 校验规则 / 核心模块 import / 接口契约 / assemble_routed 空车跑通）。
 
-**② 跑最小示例（文字 → 完整工程）**
+**② 跑最小示例（无需任何工具链，clone 下来就能跑）**
 
 ```bash
 python examples/run_example.py
 ```
 
-「点灯」→ 识别 `example_led` 模板 → 生成 18 文件完整工程（main/gpio/startup/Makefile/链接脚本全齐）。
-用的是 `stm32f407zgt6` 最小肖像（真芯片名 + 点灯最小字段），完整外设需填完整肖像（见 `docs/DATA_SPEC.md`）。
+仓库**已经带了最小材料包**：`skills/chips/stm32f407zgt6/`（最小芯片肖像，四件套齐全）
++ `example_led`（最小点灯模板）。这一步**纯 Python 就能跑**，不依赖 arm-gcc / HAL 库 / 烧录器。
+你会看到「点灯」→ 识别 `example_led` → 生成 18 文件完整工程，并打印出真实的
+`MX_GPIO_Init` 点灯代码——**这就是「机器能出咖啡」的证明**，无需装任何东西。
+完整外设需填完整肖像（见 `docs/DATA_SPEC.md`）。
 
 **③ 一条龙（文字 → 生成 → 编译 → 烧录，需工具链 + 板子）**
 
@@ -146,8 +149,12 @@ python scripts/build_flash.py "点灯"              # 默认「点灯」，编�
 python scripts/build_flash.py "点灯" --no-flash   # 只编译，不烧录
 ```
 
-工具链自动探测（arm-gcc / make / STM32Cube HAL 库 / STM32_Programmer_CLI），
-也可用环境变量覆盖：`AGENT_S_ARM_GCC` / `STM32_CUBE_FW` / `STM32_PROGRAMMER_CLI`。
+这一步才需要工具链——**工具链是 ST 官方软件，需自己装**（本仓不塞：体积几百 MB + ST 版权）：
+- `arm-none-eabi-gcc`（STM32CubeIDE 自带，或 GNU Arm Embedded Toolchain）
+- `STM32Cube_FW_F4` HAL 库（st.com 免费下载）
+- `STM32_Programmer_CLI`（STM32CubeProgrammer，st.com 免费下载）
+
+脚本自动探测这些工具，也可用环境变量覆盖：`AGENT_S_ARM_GCC` / `STM32_CUBE_FW` / `STM32_PROGRAMMER_CLI`。
 没工具链 / 没板子也能跑「生成」这一步，编译 / 烧录会明确提示缺什么、跳过什么，不静默失败。
 
 ## 版本与更新
