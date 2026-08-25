@@ -207,7 +207,8 @@ class ProfileManager(IProfileManager):
             try:
                 from knowledge.reserve import fcnt as _fcnt_module
                 self._fcnt = _fcnt_module.load()
-            except (KnowledgeIOError, OSError, json.JSONDecodeError) as e:
+            except (KnowledgeIOError, OSError, json.JSONDecodeError, ImportError) as e:
+                # ImportError = 开源仓无 knowledge.reserve（内容护城河留本地）：FCNT 不加载，画像仍可用
                 logger.warning(f"自动加载 FCNT 失败: {e}")
 
         # 3. 用 FCNT enrich 匹配的芯片画像，并将其设为默认

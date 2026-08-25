@@ -50,29 +50,26 @@ _REQUEST_STATS: dict[str, Any] = {
     "last_request_at": 0.0,
 }
 
+# ── 受保护端点（鉴权白名单，模块级集中登记）──
+# 新增端点必须在此登记，否则默认不受保护（fail-open 风险）。
+# 资源密集型 / 信息敏感 / 改全局状态的端点，一律进对应列表。
+_PROTECTED_GET = frozenset({"/metrics", "/manifest", "/capabilities", "/studio/selfcheck"})
+# /api/code/*、/api/chat*、/skill/* 按前缀保护（生成/编译/LLM 触发）
+_PROTECTED_POST_PREFIX = ("/skill/", "/api/code/", "/api/chat")
+# 改全局状态 / 敏感动作的 POST 端点（逐个登记）
+_PROTECTED_POST = frozenset({
+    "/api/voice/speak",
+    "/api/mcu",
+    "/api/mute",
+    "/api/force_chat",
+    "/api/force_code",
+    "/api/force_doc",
+    "/api/search_mode",
+})
+
+
 class _StudioHandler(BaseHTTPRequestHandler):
     """Studio HTTP 请求处理器。"""
-
-    # 受保护端点：资源密集型 / 信息敏感，必须通过鉴权
-    PROTECTED_GET = {"/metrics", "/manifest", "/capabilities", "/studio/selfcheck"}
-    # 2026-08-12 修复（审查 P1 鉴权缺口）：/api/code/generate、/api/code/compile、
-    # /api/code/stream、/api/chat、/api/chat/stream 此前不在保护列表，绑 0.0.0.0+token
-    # 时仍可无鉴权触发 LLM 生成/工程生成/编译。统一并入前缀保护。
-    # 说明：未配置 token 时 _check_auth 仅放行回环来源（默认配置行为不变）；
-    # 配置 token 后共享 UI 前端需携带 Authorization（前端 token 支持属后续改进项）。
-    PROTECTED_POST_PREFIX = ("/skill/", "/api/code/", "/api/chat")
-    # 2026-08-20 鉴权补全：/api/mcu（改全局 MCU，影响生成/编译目标芯片）、/api/mute、
-    # /api/force_*、/api/search_mode（切换全局模式）此前不在保护列表，绑 0.0.0.0+token
-    # 时仍可无鉴权改变服务全局状态。统一并入保护集合。
-    PROTECTED_POST = {
-        "/api/voice/speak",
-        "/api/mcu",
-        "/api/mute",
-        "/api/force_chat",
-        "/api/force_code",
-        "/api/force_doc",
-        "/api/search_mode",
-    }
 
     @property
     def _workspace(self) -> StudioWorkspace:
@@ -213,7 +210,7 @@ class _StudioHandler(BaseHTTPRequestHandler):
     def _handle_get(self, path: str) -> None:
         """GET 请求分发（原 do_GET 逻辑）。"""
         # 2026-08-06 安全收口：受保护端点统一鉴权（放在分发前，防 elif 链漏网）
-        if path in self.PROTECTED_GET and not self._check_auth():
+        if path in _PROTECTED_GET and not self._check_auth():
             self._send_json({"ok": False, "error": "unauthorized"}, status=401)
             return
         # 公共 UI 静态资源（限定在共享 UI 目录内）
@@ -292,8 +289,8 @@ class _StudioHandler(BaseHTTPRequestHandler):
 
         # 2026-08-06 安全收口：受保护 POST 端点统一鉴权（/skill 真编译、/voice/speak TTS）
         if (
-            path.startswith(self.PROTECTED_POST_PREFIX)
-            or path in self.PROTECTED_POST
+            path.startswith(_PROTECTED_POST_PREFIX)
+            or path in _PROTECTED_POST
         ) and not self._check_auth():
             self._send_json({"ok": False, "error": "unauthorized"}, status=401)
             return

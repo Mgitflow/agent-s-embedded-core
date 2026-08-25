@@ -82,11 +82,22 @@ agent-s-embedded-core/
 
 ## 快速开始
 
+**① 骨架自检（空车能开，不依赖血肉）**
+
 ```bash
 python scripts/self_check.py
 ```
 
 预期输出 `5/5 通过`（契约结构 / 106 校验规则 / 核心模块 import / 接口契约 / assemble_routed 空车跑通）。
+
+**② 跑最小示例（文字 → 识别 → 渲染）**
+
+```bash
+python examples/run_example.py
+```
+
+看到「点灯」被识别到 `example_led` 模板、渲染出 GPIO 点灯代码——这就是骨架的核心链路。
+完整「生成工程」需填入完整芯片肖像（见 `docs/DATA_SPEC.md`）。
 
 ## 版本与更新
 

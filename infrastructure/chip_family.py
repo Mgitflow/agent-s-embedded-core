@@ -60,6 +60,38 @@ for _key in _chip_gateway.list_adapters():
     if _fam is not None:
         FAMILIES[_key] = _fam
 
+# 空车降级：无 _series/family.json 时注入内置 F4 默认（与 chip_gateway._fallback_adapter 对称），
+# 使 get_family 的 fail-closed 回退不再 KeyError，空车可加载示意芯片。
+if not FAMILIES:
+    FAMILIES["STM32F4xx"] = ChipFamily(
+        name="STM32F4xx",
+        core="Cortex-M4",
+        cpu_flag="cortex-m4",
+        fpu_flag="-mfpu=fpv4-sp-d16 -mfloat-abi=hard",
+        defines=["STM32F407xx", "USE_HAL_DRIVER"],
+        startup_pattern="startup_stm32f407xx.s",
+        system_file="system_stm32f4xx.c",
+        it_file="stm32f4xx_it.c",
+        linker_pattern="STM32F407ZGTx_FLASH.ld",
+        openocd_target="stm32f4x.cfg",
+        hal_base_sources=[
+            "stm32f4xx_hal.c",
+            "stm32f4xx_hal_cortex.c",
+            "stm32f4xx_hal_rcc.c",
+            "stm32f4xx_hal_pwr.c",
+            "stm32f4xx_hal_pwr_ex.c",
+        ],
+        hal_family_dir="STM32F4xx_HAL_Driver",
+        default_chip="stm32f407zgt6",
+        gpio_alternate=True,
+        memory_bases={
+            "flash_base": "0x08000000",
+            "ram_base": "0x20000000",
+            "peripheral_base": "0x40000000",
+            "ccm_base": "0x10000000",
+        },
+    )
+
 
 def derive_linker_name(chip_name: str) -> str:
     """根据芯片型号推导 GCC 链接脚本文件名。
