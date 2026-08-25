@@ -15,6 +15,7 @@ def plan_to_dict(plan: Any) -> dict[str, Any]:
             tmp = plan.to_dict()
             return tmp if isinstance(tmp, dict) else {}
         except Exception:
+            # to_dict() 抛异常 → 不返回，走下方 isinstance(dict) / str 兜底（fail-safe，保证恒返回 dict）
             pass
     if isinstance(plan, dict):
         return plan

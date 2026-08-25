@@ -11,14 +11,15 @@
 python scripts/self_check.py
 ```
 
-测 4 项（当前全过）：
+测 5 项（当前全过）：
 
 | 项 | 验证什么 | 当前结果 |
 |---|---|---|
 | 契约结构 | `CodeSkillOutput` 字段完整 | PASS |
 | 校验规则 | 106 条外设校验规则齐全 | PASS |
-| 编排层 import | 14 个纯编排模块可 import | PASS |
+| 核心模块 import | 23 个核心模块可 import | PASS |
 | 接口契约 | 抽象接口 20 个 | PASS |
+| assemble_routed 空车跑通 | 缺血肉时优雅降级，不崩溃 | PASS |
 
 **自检边界**：只测「不依赖血肉」的骨架（契约 / 规则 / 编排逻辑 / 接口）。
 完整生成需要血肉数据，见下。
