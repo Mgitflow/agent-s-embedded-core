@@ -342,6 +342,16 @@ class FunctionalTemplateStore:
         # 上电即回传，不被启动门挡住（自动测试无按键）。
         result["requires_uart"] = bool(tpl.get("requires_uart"))
         result["off"] = str(tpl.get("off", "") or "")
+        # 芯片级联（连接效果）：functional 模板也可声明 cascade（宿主 = 同阵营外设），
+        # 与开发板级联共用同一套渲染机制（camp=chip 标识芯片阵营，2026-08-25）。
+        cascade = tpl.get("cascade")
+        result["cascade"] = cascade
+        if cascade:
+            from knowledge.template_forge.cascade import render_cascade
+
+            result["init"], result["loop"], result["off"] = render_cascade(
+                result["init"], result["loop"], result["off"], cascade
+            )
         return result
 
     # ---- 归档 ----

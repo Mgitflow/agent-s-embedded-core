@@ -162,53 +162,11 @@ def render_simple_template(tid: str, templates: dict[str, Any]) -> dict[str, Any
     }
 
 
-def _derive_cascade_params(cascade: dict[str, Any]) -> dict[str, str]:
-    """级联配置 → 渲染参数（引脚/电平/比较符的语义 → C 代码映射）。
-
-    cascade 是语义化配置（用户/AI 可读）：
-      reads   = 读宿主的哪个输出变量
-      trigger = below(低于基准触发) / above(高于基准触发)
-      offset  = 相对基准的偏移量（上电采样作基准，环境相关阈值不能写死——2026-08-25）
-      pin     = 动作引脚（如 "PF9"）
-      active  = low(低电平有效=点亮) / high(高电平有效)
-    派生为 C 渲染参数：pin_port/pin_no/on_level/off_level/reads/cmp/cmp_base/offset。
-      cmp      = 比较符（above→">" / below→"<"）
-      cmp_base = 基准偏移符（above→"+" / below→"-"），判断 reads vs (baseline ± offset)
-    """
-    pin = str(cascade.get("pin", "PF9"))
-    m = re.match(r"^P([A-IK])(\d+)$", pin)
-    port = m.group(1) if m else "F"
-    pin_no = m.group(2) if m else "9"
-    trigger = str(cascade.get("trigger", "below"))
-    active = str(cascade.get("active", "low"))
-    cmp_op = "<" if trigger == "below" else ">"
-    cmp_base = "-" if trigger == "below" else "+"
-    on_level = "GPIO_PIN_RESET" if active == "low" else "GPIO_PIN_SET"
-    off_level = "GPIO_PIN_SET" if active == "low" else "GPIO_PIN_RESET"
-    # offset 优先；旧配置的 threshold（绝对阈值）兼容读入，但新配置一律用 offset
-    offset = str(cascade.get("offset", cascade.get("threshold", "")) or "")
-    return {
-        "pin_port": port,
-        "pin_no": pin_no,
-        "on_level": on_level,
-        "off_level": off_level,
-        "reads": str(cascade.get("reads", "") or ""),
-        "cmp": cmp_op,
-        "cmp_base": cmp_base,
-        "offset": offset,
-    }
-
-
-def _render_cascade_section(code: str, params: dict[str, str]) -> str:
-    """用级联渲染参数填充 ${...} 占位符（safe_substitute 保留未知占位符不报错）。"""
-    from string import Template as StrTemplate
-
-    if not code:
-        return code
-    try:
-        return StrTemplate(code).substitute(params)
-    except KeyError:
-        return StrTemplate(code).safe_substitute(params)
+# 级联渲染已抽到通用模块 cascade.py（两阵营共用，2026-08-25）
+from knowledge.template_forge.cascade import (  # noqa: E402
+    derive_cascade_params as _derive_cascade_params,
+    render_cascade_section as _render_cascade_section,
+)
 
 
 def resolve_board_simple(chip: str, root: Path | None = None) -> dict[str, Any]:
