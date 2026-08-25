@@ -71,8 +71,11 @@ agent-s-embedded-core/
 ├── src/
 │   ├── api/              唯一入口（server + 门卫）
 │   └── studio/           骨架五件套（skill/context/registry/result/workspace）
+├── examples/
+│   └── run_example.py    最小可运行示例（文字 → 完整工程）
 ├── scripts/
-│   └── self_check.py     骨架自检（空车能开验证）
+│   ├── self_check.py     骨架自检（空车能开验证）
+│   └── build_flash.py    一条龙：生成 → 编译 → 烧录（需工具链）
 └── docs/
     ├── INTRODUCTION.md   仓库介绍（核心逻辑 + 成品展示，先看这个）
     ├── ARCHITECTURE.md   骨架分层架构
@@ -90,14 +93,25 @@ python scripts/self_check.py
 
 预期输出 `5/5 通过`（契约结构 / 106 校验规则 / 核心模块 import / 接口契约 / assemble_routed 空车跑通）。
 
-**② 跑最小示例（文字 → 识别 → 渲染）**
+**② 跑最小示例（文字 → 完整工程）**
 
 ```bash
 python examples/run_example.py
 ```
 
-看到「点灯」被识别到 `example_led` 模板、渲染出 GPIO 点灯代码——这就是骨架的核心链路。
-完整「生成工程」需填入完整芯片肖像（见 `docs/DATA_SPEC.md`）。
+「点灯」→ 识别 `example_led` 模板 → 生成 18 文件完整工程（main/gpio/startup/Makefile/链接脚本全齐）。
+用的是 `stm32f407zgt6` 最小肖像（真芯片名 + 点灯最小字段），完整外设需填完整肖像（见 `docs/DATA_SPEC.md`）。
+
+**③ 一条龙（文字 → 生成 → 编译 → 烧录，需工具链 + 板子）**
+
+```bash
+python scripts/build_flash.py "点灯"              # 默认「点灯」，编译 + 烧录
+python scripts/build_flash.py "点灯" --no-flash   # 只编译，不烧录
+```
+
+工具链自动探测（arm-gcc / make / STM32Cube HAL 库 / STM32_Programmer_CLI），
+也可用环境变量覆盖：`AGENT_S_ARM_GCC` / `STM32_CUBE_FW` / `STM32_PROGRAMMER_CLI`。
+没工具链 / 没板子也能跑「生成」这一步，编译 / 烧录会明确提示缺什么、跳过什么，不静默失败。
 
 ## 版本与更新
 

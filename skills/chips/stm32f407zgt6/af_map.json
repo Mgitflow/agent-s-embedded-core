@@ -1,1 +1,12 @@
-{"comment": "最小示例：仅 GPIO", "af_numbers": {}, "default_pins": {"GPIO": {"out": "PA5"}}, "full_af_map": {"GPIO_OUT": "PA5"}}
+{
+  "comment": "最小示例：仅 GPIO",
+  "af_numbers": {},
+  "default_pins": {
+    "GPIO": {
+      "out": "PA5"
+    }
+  },
+  "full_af_map": {
+    "GPIO_OUT": "PA5"
+  }
+}

@@ -6,6 +6,9 @@
 看到「点灯」→ 识别 example_led 模板 → 生成 18 文件完整工程（main/gpio/startup/Makefile/链接脚本）。
 用的是「stm32f407zgt6 最小肖像」——真芯片名，但只抠了点灯需要的最小字段（PA5 + 最小时钟），
 不是完整 407 引脚（完整肖像是护城河，见 docs/DATA_SPEC.md）。
+
+要「生成 → 编译 → 烧录」一条龙（需工具链 + 板子），跑：
+    python scripts/build_flash.py "点灯"
 """
 from __future__ import annotations
 
