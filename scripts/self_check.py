@@ -3,8 +3,9 @@
 开源仓库不夹带血肉（芯片肖像/功能模板/手册数据），本自检只测**不依赖血肉**的骨架：
   1. 契约结构完整（CodeSkillOutput 字段）
   2. 校验规则数（确定性骨架的工艺标准，应为 106 条）
-  3. 编排层核心模块可 import（识别 / 模板 / 校验 / 引脚分配 / 组装）
+  3. 核心模块可 import（契约 / 校验 / 编排 / 编译 / 生成器全链）
   4. 接口契约存在（抽象接口，血肉由此接入）
+  5. assemble_routed 空车跑通（骨架能优雅降级，不 KeyError）
 
 「完整文字 → 生成 → 编译」验证需要血肉数据，见 docs/VERIFICATION.md。
 
@@ -57,15 +58,24 @@ def _imports() -> tuple[bool, str]:
         "engine.rule_engine",
         "engine.validators",
         "engine.compiler.pipeline",
-        "knowledge.template_forge.pin_allocator",
+        "infrastructure.config",
+        "infrastructure.chip_gateway",
+        "infrastructure.chip_family",
+        "infrastructure.board_resolver",
+        "infrastructure.makefile_generator",
+        "knowledge.template_forge.functional_assembler",
         "knowledge.template_forge.block_assembler",
         "knowledge.template_forge.project_slicer",
         "knowledge.template_forge.chip_portrait_adapter",
+        "knowledge.template_forge.pin_allocator",
         "knowledge.template_forge.industrial_contract",
         "knowledge.template_forge.defense_injector",
+        "knowledge.template_forge.hal_parser",
         "knowledge.template_forge.param_filler",
+        "knowledge.template_forge.board_simple",
         "knowledge.template_forge.functional_templates",
         "knowledge.template_forge.pin_recognition",
+        "knowledge.loaders.mx_skeleton",
     ]
     failed: list[str] = []
     for mod in modules:
@@ -75,7 +85,7 @@ def _imports() -> tuple[bool, str]:
             failed.append(f"{mod} ({type(exc).__name__})")
     if failed:
         return False, "导入失败: " + "; ".join(failed)
-    return True, f"{len(modules)} 个编排模块可 import"
+    return True, f"{len(modules)} 个核心模块可 import"
 
 
 def _interfaces() -> tuple[bool, str]:
@@ -85,11 +95,22 @@ def _interfaces() -> tuple[bool, str]:
     return bool(names), f"抽象接口 {len(names)} 个"
 
 
+def _assemble_routed() -> tuple[bool, str]:
+    from knowledge.template_forge.functional_assembler import FunctionalAssembler
+
+    r = FunctionalAssembler().assemble_routed("点灯", chip="stm32f407zgt6")
+    if not isinstance(r, dict):
+        return False, f"assemble_routed 返回 {type(r).__name__}（应为 dict）"
+    # 空车无真实模板，应优雅降级返回「未识别」提示而非崩溃
+    return True, "assemble_routed 空车跑通（缺模板时优雅降级，不崩溃）"
+
+
 def main() -> int:
     _check("契约结构", _contract)
     _check("校验规则", _rules)
-    _check("编排层 import", _imports)
+    _check("核心模块 import", _imports)
     _check("接口契约", _interfaces)
+    _check("assemble_routed 空车跑通", _assemble_routed)
 
     passed = sum(1 for _, ok, _ in _results if ok)
     print(f"=== 骨架自检：{passed}/{len(_results)} 通过 ===")
@@ -97,7 +118,8 @@ def main() -> int:
         mark = "PASS" if ok else "FAIL"
         print(f"  [{mark}] {name}: {detail}")
     if passed == len(_results):
-        print("\n骨架自检通过。完整生成验证需填入真实芯片包 + 功能模板（见 docs/VERIFICATION.md）。")
+        print("\n空车能开：骨架完整可 import、可跑通、缺血肉时优雅降级。")
+        print("填入真实芯片包 + 功能模板即可复现完整生成（见 docs/VERIFICATION.md）。")
     return 0 if passed == len(_results) else 1
 
 

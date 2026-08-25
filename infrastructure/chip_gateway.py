@@ -85,6 +85,23 @@ def _chips_dir() -> Path:
     return Path(os.environ.get("AGENT_S_CHIPS_DIR", str(PROJECT_ROOT / "skills" / "chips")))
 
 
+# 默认系列（未配置时，含空车降级用的示意默认芯片）
+_DEFAULT_KEY = "STM32F4xx"
+_DEFAULT_CHIP = "stm32f407zgt6"
+
+
+def _fallback_adapter() -> FamilyAdapter:
+    """空车降级：无任何 _series/family.json 时，注入内置示意 F4 适配器兜底。"""
+    return FamilyAdapter(
+        key=_DEFAULT_KEY,
+        series_dir="f4",
+        reference_key="F4",
+        hal_prefix="stm32f4xx",
+        templates_key=_DEFAULT_KEY,
+        default_chip=_DEFAULT_CHIP,
+    )
+
+
 def _build_adapters() -> dict[str, FamilyAdapter]:
     """扫 ``skills/chips/_series/*/family.json`` 自动注册 FamilyAdapter（去枚举）。
 
@@ -96,6 +113,7 @@ def _build_adapters() -> dict[str, FamilyAdapter]:
     series_root = _chips_dir() / "_series"
     adapters: dict[str, FamilyAdapter] = {}
     if not series_root.exists():
+        adapters[_DEFAULT_KEY] = _fallback_adapter()
         return adapters
 
     for series_dir in sorted(p.name for p in series_root.iterdir() if p.is_dir()):
@@ -122,14 +140,12 @@ def _build_adapters() -> dict[str, FamilyAdapter]:
             defines=tuple(str(d) for d in fam.get("defines", [])),
             startup_from_reference=(series_dir == "g4"),
         )
+    if not adapters:
+        adapters[_DEFAULT_KEY] = _fallback_adapter()
     return adapters
 
 
 _FAMILY_ADAPTERS: dict[str, FamilyAdapter] = _build_adapters()
-
-# 默认系列（未配置时）
-_DEFAULT_KEY = "STM32F4xx"
-_DEFAULT_CHIP = "stm32f407zgt6"
 
 # 环境变量：默认芯片 / 默认系列切换点
 _ENV_DEFAULT_CHIP = "S_DEFAULT_CHIP"
