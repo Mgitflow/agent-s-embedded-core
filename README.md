@@ -6,10 +6,12 @@
 ![Self-Check](https://img.shields.io/badge/Self--Check-5%2F5-brightgreen.svg)
 ![Deterministic](https://img.shields.io/badge/Deterministic-First-red.svg)
 
-> **一句文字，生成可烧录的 STM32 工程。**
-> 文字 → 识别套式 → 模板锻造 → 106 条校验 → 真编译。
+> 🚀 **一句文字，生成可烧录的 STM32 工程。**
+> 文字 → 🔍 识别 → 🔨 模板锻造 → ✅ 106 校验 → ⚙️ 真编译 → 🔌 烧录。
 
-> **这里给起点，不给上限。** 打造你自己的嵌入式工具链——上限，由你定。
+> 这是一个**个人编辑模板套件**——**这里给起点，不给上限。**
+> 它帮你打造你自己的嵌入式工具链。
+> **上限不再由天，一切皆有人定。**
 
 ---
 
