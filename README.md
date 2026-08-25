@@ -35,6 +35,7 @@ agent-s-embedded-core/
 ├── scripts/
 │   └── self_check.py     骨架自检（空车能开验证）
 └── docs/
+    ├── INTRODUCTION.md   仓位介绍（核心逻辑 + 成品展示，先看这个）
     ├── ARCHITECTURE.md   骨架分层架构
     ├── DATA_SPEC.md      血肉格式说明（填肉的字段参考）
     └── VERIFICATION.md   验证方法（自检 + 完整生成验证）

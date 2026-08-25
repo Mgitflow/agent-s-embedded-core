@@ -1,15 +1,5 @@
 {
-  "meta": {"chip": "_example_chip", "family": "F4", "core": "Cortex-M4F", "package": "LQFP144"},
-  "capabilities": {},
-  "clock_tree": {},
-  "clock_bus": {},
-  "clock_requirements": {},
-  "init_order": [],
-  "nvic_priorities": {},
+  "meta": {"chip": "_example_chip", "family": "F4"},
   "pin_map": {},
-  "af_map": {},
-  "debug": {},
-  "skeleton": {},
-  "special_pins": {},
-  "dma": {}
+  "af_map": {}
 }

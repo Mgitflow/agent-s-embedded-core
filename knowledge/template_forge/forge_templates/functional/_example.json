@@ -1,16 +1,9 @@
 {
-  "id": "example_peripheral",
-  "version": "0.0.0",
+  "id": "example",
   "peripheral": "GPIO",
-  "init_func": "MX_GPIO_Init",
-  "deinit_func": "",
   "keywords": ["示例", "占位"],
-  "description": "示例功能模板（占位）。填真实模板时，此处描述该外设做什么。",
-  "depends": [],
-  "globals": "",
-  "init": "  /* 在此填写外设 init 代码（参数化占位用 ${xxx}） */\n",
+  "description": "示例功能模板（最小原型）。",
+  "init": "  /* 外设 init 代码，${xxx} 为参数占位 */\n",
   "loop": "",
-  "deinit": "",
-  "params": {},
-  "requires_uart": false
+  "params": {}
 }

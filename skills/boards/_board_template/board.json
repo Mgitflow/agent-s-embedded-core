@@ -1,10 +1,6 @@
 {
   "meta": {"board": "_example_board", "name": "示例开发板", "mcu": "_example_chip"},
-  "oscillator": {"hse_mhz": 8, "lse_mhz": 32.768},
   "leds": {},
   "keys": {},
-  "debug": {},
-  "power": {},
-  "onboard_peripherals": {},
-  "codegen_rules": {}
+  "onboard_peripherals": {}
 }
