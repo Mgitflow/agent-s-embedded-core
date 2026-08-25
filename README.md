@@ -110,9 +110,9 @@ python scripts/build_flash.py "点灯" --no-flash   # 只编译，不烧录
 }
 ```
 
-`keywords` 用于识别，`init / loop / deinit` 是代码块。填完运行 `python examples/run_example.py` 即可识别新词、生成新代码。
+`keywords` 用于识别，`init / loop / deinit` 是代码块。完整字段规范见 `knowledge/template_forge/TEMPLATE_SPEC.md`。填完运行 `python examples/run_example.py` 即可识别新词、生成新代码。
 
-**填肉就是试错。** 模板错？校验器拦。引脚错？编译报。上板读 FF？回来改 portrait。骨架降低试错成本，不保证一次做对。
+**填肉就是试错。** 模板错？校验器拦。引脚错？编译报。上板读 FF？回来改芯片肖像。骨架降低试错成本，不保证一次做对。
 
 ## 开源边界
 
