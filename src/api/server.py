@@ -28,7 +28,7 @@ from src.api._gate_helpers import (
     _load_settings,
     _record_request,
 )
-from src.deps.assembly import build_workspace
+from src.api._intelligence import build_workspace  # 智能层网关（「LLM 可剥离」接缝）
 
 if TYPE_CHECKING:
     from src.studio.workspace import StudioWorkspace
@@ -52,11 +52,8 @@ _REQUEST_STATS: dict[str, Any] = {
 
 # ── 受保护端点（鉴权白名单，模块级集中登记）──
 # 新增端点必须在此登记，否则默认不受保护（fail-open 风险）。
-# 资源密集型 / 信息敏感 / 改全局状态的端点，一律进对应列表。
 _PROTECTED_GET = frozenset({"/metrics", "/manifest", "/capabilities", "/studio/selfcheck"})
-# /api/code/*、/api/chat*、/skill/* 按前缀保护（生成/编译/LLM 触发）
 _PROTECTED_POST_PREFIX = ("/skill/", "/api/code/", "/api/chat")
-# 改全局状态 / 敏感动作的 POST 端点（逐个登记）
 _PROTECTED_POST = frozenset({
     "/api/voice/speak",
     "/api/mcu",
@@ -68,12 +65,38 @@ _PROTECTED_POST = frozenset({
 })
 
 
+def _chat_reply(workspace: StudioWorkspace | None, data: dict[str, Any]) -> dict[str, Any]:
+    """/api/chat 兜底：智能层剥离（无 workspace）时返回确定性提示，否则走 LLM 聊天。"""
+    if workspace is None:
+        return {
+            "reply": (
+                "当前为确定性骨架模式（不含 LLM 聊天层）。\n"
+                "请用 /api/code/generate 直接生成代码。"
+            ),
+            "emotion": {"mood": "neutral", "intensity": 0.5},
+        }
+    return asyncio.run(_chat_adapter.chat(workspace, data))
+
+
+async def _sse_deterministic_chat(data: dict[str, Any]) -> Any:
+    """智能层剥离时 /api/chat/stream 的确定性降级：一条提示 + done。"""
+    from src.api.ui_adapter import _sse_event
+
+    yield _sse_event({
+        "token": "当前为确定性骨架模式（不含 LLM 聊天层）。请用 /api/code/generate 直接生成代码。",
+    })
+    yield _sse_event({"done": True, "emotion": {"mood": "neutral", "intensity": 0.5}})
+
+
 class _StudioHandler(BaseHTTPRequestHandler):
     """Studio HTTP 请求处理器。"""
 
     @property
-    def _workspace(self) -> StudioWorkspace:
-        """类型收窄访问：http.server 的 self.server 类型为 BaseServer，运行期实为 _StudioServer。"""
+    def _workspace(self) -> StudioWorkspace | None:
+        """类型收窄访问：http.server 的 self.server 类型为 BaseServer，运行期实为 _StudioServer。
+
+        智能层剥离（开源仓）时为 None——各 studio/chat 端点据此降级为确定性模式。
+        """
         srv = self.server
         assert isinstance(srv, _StudioServer), "server 必须是 _StudioServer"
         return srv.workspace
@@ -230,31 +253,56 @@ class _StudioHandler(BaseHTTPRequestHandler):
             self._send_json(ui_adapter.system_info())
         elif path == "/skills":
             ws = self._workspace
-            self._send_json(
-                {
-                    "studio": {
-                        "name": "Agent-S-Studio",
-                        "version": APP_VERSION,
-                        "role": "左脑 / 技术工作室",
-                    },
-                    "skills": ws.registry.list_skills(),
-                }
-            )
+            studio_info = {
+                "studio": {
+                    "name": "Agent-S-Studio",
+                    "version": APP_VERSION,
+                    "role": "左脑 / 技术工作室",
+                },
+            }
+            if ws is None:
+                # 智能层剥离（开源仓）：无技能列表，确定性模式
+                self._send_json({**studio_info, "skills": [], "mode": "deterministic"})
+            else:
+                self._send_json({**studio_info, "skills": ws.registry.list_skills()})
         elif path == "/studio/status":
-            self._send_json({"ok": True, **self._workspace.get_status()})
+            ws = self._workspace
+            if ws is None:
+                self._send_json({
+                    "ok": True,
+                    "mode": "deterministic",
+                    "skill_count": 0,
+                    "available_modes": [],
+                })
+            else:
+                self._send_json({"ok": True, **ws.get_status()})
         elif path == "/studio/selfcheck":
             ws = self._workspace
-            declared = [s["name"] for s in ws.registry.list_skills()]
-            self._send_json({"ok": True, **ws.registry.check_capabilities(declared)})
+            if ws is None:
+                self._send_json({"ok": True, "mode": "deterministic", "note": "智能层剥离，纯确定性骨架"})
+            else:
+                declared = [s["name"] for s in ws.registry.list_skills()]
+                self._send_json({"ok": True, **ws.registry.check_capabilities(declared)})
         elif path == "/manifest":
             # SE 框架动态发现：主入口统一暴露（不再需要独立 8200 服务）
-            self._send_json(_build_manifest(self._workspace).to_dict())
+            ws = self._workspace
+            if ws is None:
+                self._send_json({
+                    "name": "agent-s-embedded",
+                    "mode": "deterministic",
+                    "note": "智能层剥离（无 workspace），/manifest 仅骨架信息",
+                })
+            else:
+                self._send_json(_build_manifest(ws).to_dict())
         elif path == "/metrics":
             # 可观测性：请求统计指标（2026-08-06 轻量落地）
             self._send_json(_collect_metrics())
         elif path == "/capabilities":
             ws = self._workspace
-            self._send_json({"capabilities": [s["name"] for s in ws.registry.list_skills()]})
+            if ws is None:
+                self._send_json({"capabilities": [], "mode": "deterministic"})
+            else:
+                self._send_json({"capabilities": [s["name"] for s in ws.registry.list_skills()]})
         elif path.startswith("/audio/"):
             # 2026-08-06：TTS 生成的音频文件（data/tts/cache/）
             # 安全修复：fname 只取文件名（防 ../ 穿越），并限定在 _TTS_DIR 内
@@ -297,7 +345,7 @@ class _StudioHandler(BaseHTTPRequestHandler):
 
         # UI 适配端点
         ui_routes: dict[str, Any] = {
-            "/api/chat": lambda d: asyncio.run(_chat_adapter.chat(workspace, d)),
+            "/api/chat": lambda d: _chat_reply(workspace, d),
             "/api/code/generate": lambda d: asyncio.run(ui_adapter.code_generate(workspace, d)),
             "/api/code/compile": lambda d: asyncio.run(ui_adapter.code_compile(workspace, d)),
             "/api/mcu": ui_adapter.set_mcu,
@@ -338,6 +386,10 @@ class _StudioHandler(BaseHTTPRequestHandler):
 
         # Studio 技能端点
         if path.startswith("/skill/"):
+            if workspace is None:
+                # 智能层剥离（开源仓）：无技能可执行
+                self._send_json({"ok": False, "error": "智能层剥离，无技能可执行"}, status=404)
+                return
             data = self._read_json_body() or {}
             name = workspace.registry.resolve_endpoint(path)
             if name is None:
@@ -372,7 +424,11 @@ class _StudioHandler(BaseHTTPRequestHandler):
         self.end_headers()
 
         if kind == "chat":
-            generator = _chat_adapter.chat_stream(workspace, data)
+            if workspace is None:
+                # 智能层剥离（开源仓）：chat 流降级为确定性提示（一次 done）
+                generator = _sse_deterministic_chat(data)
+            else:
+                generator = _chat_adapter.chat_stream(workspace, data)
         else:
             generator = ui_adapter.code_generate_stream(workspace, data)
         # 2026-08-06 修复：客户端断开时 wfile.write 抛 BrokenPipeError，
@@ -406,7 +462,14 @@ class _StudioServer(ThreadingHTTPServer):
         cors_allowed_origins: list[str] | None = None,
     ) -> None:
         super().__init__(server_address, RequestHandlerClass)
-        self.workspace = workspace or build_workspace()
+        # 智能层剥离（开源仓）时 build_workspace 为 None → workspace 为 None（确定性模式）
+        self.workspace: StudioWorkspace | None
+        if workspace is not None:
+            self.workspace = workspace
+        elif build_workspace is not None:
+            self.workspace = build_workspace()
+        else:
+            self.workspace = None
         self.api_token = api_token
         self.cors_enabled = cors_enabled
         self.cors_allowed_origins = cors_allowed_origins or []

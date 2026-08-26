@@ -79,6 +79,11 @@ async def code_generate(workspace: Any, data: dict[str, Any]) -> dict[str, Any]:
     intent = data.get("intent") or data.get("message", "")
     peripherals = data.get("peripherals") or []
     mcu = data.get("mcu") or _ui_state["mcu"]
+    if workspace is None:
+        # 智能层剥离（开源仓）：确定性降级，不依赖 code_gen 技能/LLM
+        from ._intelligence import deterministic_generate
+
+        return deterministic_generate(intent, mcu)
     result = await workspace.run("code_gen", {
         "requirement": intent,
         "mcu": mcu,
@@ -118,6 +123,9 @@ async def code_compile(workspace: Any, data: dict[str, Any]) -> dict[str, Any]:
     code = data.get("code", "")
     if not code:
         return {"passed": False, "errors": ["代码为空"]}
+    if workspace is None:
+        # 智能层剥离（开源仓）：编译依赖 code_gen 技能（含完整编译管线），无智能层时降级
+        return {"passed": False, "errors": ["智能层剥离，编译需完整 code_gen 技能"]}
 
     skill = workspace.get_skill("code_gen")
     if skill is None:
@@ -139,6 +147,19 @@ async def code_generate_stream(workspace: Any, data: dict[str, Any]) -> Any:
     intent = data.get("intent") or data.get("message", "")
     if not intent:
         yield _sse_event({"error": "缺少需求", "done": True})
+        return
+
+    if workspace is None:
+        # 智能层剥离（开源仓）：确定性降级——一次性生成，包装成 done 事件
+        from ._intelligence import deterministic_generate
+
+        result = deterministic_generate(intent, data.get("mcu") or _ui_state["mcu"])
+        yield _sse_event({
+            "done": True,
+            "code": result.get("code", ""),
+            "approved": result.get("passed", False),
+            "elapsed_ms": 0,
+        })
         return
 
     skill = workspace.get_skill("code_gen")
