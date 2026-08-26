@@ -159,8 +159,7 @@ python scripts/build_flash.py "点灯" --no-flash   # 只编译，不烧录
 V1.0 初版框架，以下不完整，需自行补全：
 
 - 完整生成需完整芯片肖像（本仓仅含 407 最小**示例**肖像，其他芯片需查官方手册自行补全）
-- `src/api/server.py` 开源仓仅接口参考（依赖智能层，需从原项目补）
-- `functional_assembler.py` 836 行，待拆分
+- `src/api/server.py` 可起**确定性服务**（智能层剥离后自动降级：`/api/code/generate` 走确定性生成，`/api/chat` 返回提示）
 - 异常处理有意 fail-closed，`except Exception` 是兜底设计
 
 ## 铁律
