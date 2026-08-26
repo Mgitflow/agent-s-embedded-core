@@ -726,7 +726,7 @@ class FunctionalAssembler:
     def _render_with_template(self, tpl: dict[str, Any], params: dict[str, Any]) -> dict[str, Any]:
         """用外部模板对象渲染（控制联动改过插槽后，绕过 store 缓存）。
 
-        ：${btn_action_code} 这类联动插槽必须在渲染前替换，
+        ${btn_action_code} 这类联动插槽必须在渲染前替换，
         渲染后 safe_substitute 会把缺失插槽清空，无处可填。
         """
         from string import Template as StrTemplate

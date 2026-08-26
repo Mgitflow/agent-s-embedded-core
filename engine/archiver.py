@@ -24,7 +24,7 @@ _BUILD_EXTS = {".elf", ".hex", ".bin", ".map", ".lst"}
 _FIRMWARE_ORDER = (".hex", ".bin", ".elf")
 
 # 归档保留上限：按修改时间保留最近 N 个归档单元，超出自动裁剪（防 output/ 无限膨胀）。
-# ：归档必须带保留策略，不能只进不出（此前 1.2GB 失控）。
+# 归档必须带保留策略，不能只进不出（此前 1.2GB 失控）。
 MAX_ARCHIVE_UNITS = 100
 
 

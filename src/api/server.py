@@ -304,7 +304,7 @@ class _StudioHandler(BaseHTTPRequestHandler):
             else:
                 self._send_json({"capabilities": [s["name"] for s in ws.registry.list_skills()]})
         elif path.startswith("/audio/"):
-            # ：TTS 生成的音频文件（data/tts/cache/）
+            # TTS 生成的音频文件（data/tts/cache/）
             # 安全修复：fname 只取文件名（防 ../ 穿越），并限定在 _TTS_DIR 内
             from infrastructure.tts import _TTS_DIR
 
@@ -473,7 +473,7 @@ class _StudioServer(ThreadingHTTPServer):
         self.api_token = api_token
         self.cors_enabled = cors_enabled
         self.cors_allowed_origins = cors_allowed_origins or []
-        # ：SSE 长连接线程设为 daemon，避免阻塞进程退出
+        # SSE 长连接线程设为 daemon，避免阻塞进程退出
         self.daemon_threads = True
 
 

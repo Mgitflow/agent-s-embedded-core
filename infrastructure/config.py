@@ -19,7 +19,7 @@ CHIP_SKILL_DIR = str(PROJECT_ROOT / "skills" / "chips" / ACTIVE_CHIP)
 CHIP_MANIFEST = str(PROJECT_ROOT / "skills" / "chips" / ACTIVE_CHIP / "manifest.yaml")
 
 
-# ：config/settings.yaml 统一读取入口（server / assembly 共用，避免循环依赖与重复读取）
+# config/settings.yaml 统一读取入口（server / assembly 共用，避免循环依赖与重复读取）
 _settings_cache: dict[str, Any] | None = None
 
 
@@ -214,7 +214,7 @@ SAVE = {
 }
 
 # ========== v2.1.0 Reference: 外部 HAL/CMSIS/模板文件 ==========
-# ：reference（28 万行 STM32 HAL 库）移出主仓库，
+# reference（28 万行 STM32 HAL 库）移出主仓库，
 # 作为本地附属库位于 E:/Code/reference-stm32f4/（环境变量 S_REFERENCE_DIR 可覆盖）
 # 芯片数据扩充（F103/G431）：HAL 库按芯片系列分区
 #   - F1 → E:/Code/reference-stm32f1/（环境变量 S_REFERENCE_DIR_F1）

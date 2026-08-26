@@ -93,7 +93,7 @@ def project_file_anchors(chip: str | None = None) -> dict[str, list[str]]:
     }
 
 # ────────────────────────── 工业骨架固定顺序（工艺链的「孔序」） ──────────────────────────
-# ：HAL 引入 → 业务 .c → 时钟 → 重置 → 初始化 → 配置 → 按需时序。
+# HAL 引入 → 业务 .c → 时钟 → 重置 → 初始化 → 配置 → 按需时序。
 
 INDUSTRIAL_ORDER: list[str] = [
     "hal_include",        # 先标明 HAL 库引入

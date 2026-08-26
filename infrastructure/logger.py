@@ -56,7 +56,7 @@ def setup_logging(level: int = logging.INFO) -> logging.Logger:
         root.addHandler(console)
 
         # 文件：JSON 结构化（request_id 贯穿）
-        # ：文件被占用（IDE/索引服务锁）时降级为仅控制台，
+        # 文件被占用（IDE/索引服务锁）时降级为仅控制台，
         # 避免 setup_logging 崩溃导致整个服务/测试导入失败。
         try:
             file_handler = RotatingFileHandler(

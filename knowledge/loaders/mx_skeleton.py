@@ -37,7 +37,7 @@ _FUNC_TO_HAL_PERI: dict[str, str] = {
 }
 
 # ========== 三层架构骨架模板（应用层 / 业务层，范式级通用，不随芯片族变） ==========
-#  ：生成代码从「main.c 平铺」升级为「应用/业务/驱动」三层，
+# 生成代码从「main.c 平铺」升级为「应用/业务/驱动」三层，
 # 依赖方向单向（应用层 → 业务层 → 驱动层）。main.c（驱动层硬件初始化）只调
 # App_Loop()（应用层），业务逻辑（原 while(1) 里的 main_loop）搬到 App_Business_Run()（业务层）。
 
@@ -578,7 +578,7 @@ class MxSkeleton(IMxSkeleton):
     def generate_system(self) -> str:
         """生成 system 源文件。
 
-        ：G4 系列优先使用官方 system_stm32g4xx.c（reference-stm32g4/
+        G4 系列优先使用官方 system_stm32g4xx.c（reference-stm32g4/
         device/Include/，寄存器布局与 F4 不同——F4 模板用 RCC->CIR 等 G4 没有的
         寄存器）；其他族用模板参数化生成。
         """
@@ -752,7 +752,7 @@ class MxSkeleton(IMxSkeleton):
     def generate_startup_s(self) -> str:
         """生成启动汇编文件（按芯片族选择模板）。
 
-        ：G4 系列优先使用官方 GCC 启动文件（reference-stm32g4/startup/，
+        G4 系列优先使用官方 GCC 启动文件（reference-stm32g4/startup/，
         中断向量表与 F4 不同）；找不到/其他族回退模板。
         """
         family_name = getattr(self._family, "name", "")
