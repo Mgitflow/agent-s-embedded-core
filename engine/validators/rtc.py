@@ -21,7 +21,7 @@ _check_rtc_reconfig_no_deinit = make_reconfig_deinit_validator(r"\bHAL_RTC_DeIni
 _check_rtc_deinit_no_clk_off = make_deinit_clk_off_validator(r"__HAL_RCC_RTC_DISABLE\s*\(")
 
 def _check_rtc_time_set(ctx: dict[str, Any]) -> bool:
-    """检查是否设置了 RTC 时间（2026-08-13 上下文化：无 RTC 初始化则放行）。"""
+    """检查是否设置了 RTC 时间（上下文化：无 RTC 初始化则放行）。"""
     code = strip_comments(ctx.get("_code_artifact", ""))
     if not code:
         return True
@@ -30,7 +30,7 @@ def _check_rtc_time_set(ctx: dict[str, Any]) -> bool:
     return bool(re.search(r"\bHAL_RTC_SetTime\s*\(", code))
 
 def _check_rtc_date_set(ctx: dict[str, Any]) -> bool:
-    """检查是否设置了 RTC 日期（2026-08-13 上下文化：无 RTC 初始化则放行）。"""
+    """检查是否设置了 RTC 日期（上下文化：无 RTC 初始化则放行）。"""
     code = strip_comments(ctx.get("_code_artifact", ""))
     if not code:
         return True

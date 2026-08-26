@@ -1,10 +1,10 @@
 """工程切片器：把渲染后的功能 bundle 切成标准 CubeMX 工程结构。
 
-职责单一（2026-08-20 解耦）：只做「bundle → 外设 .c 函数体 + hal_msp.c 时钟/引脚复用」的
+职责单一（解耦）：只做「bundle → 外设 .c 函数体 + hal_msp.c 时钟/引脚复用」的
 切片与归组。模板存储/匹配/渲染归 functional_templates.FunctionalTemplateStore，
 本模块不碰。
 
-切片规则（严格 CubeMX，2026-08-18 念安拍板）：
+切片规则（严格 CubeMX，）：
   - 时钟使能 __HAL_RCC_xxx_CLK_ENABLE() → hal_msp.c 的 HAL_xxx_MspInit
   - 引脚复用块（GPIO_InitTypeDef → HAL_GPIO_Init）→ 复合外设进 msp，纯 GPIO 进 gpio.c
   - 外设句柄配置 + HAL_xxx_Init → 外设 .c 的 MX_xxx_Init
@@ -23,7 +23,7 @@ _log = logging.getLogger(__name__)
 def split_init_for_msp(init_body: str, peripheral: str) -> tuple[str, str]:
     """把渲染后的 init 体拆成 (mx_init_body, msp_code)。
 
-    CubeMX 严格结构（2026-08-18 念安拍板）：
+    CubeMX 严格结构：
       - 时钟使能 `__HAL_RCC_xxx_CLK_ENABLE()` → hal_msp.c 的 HAL_xxx_MspInit
       - GPIO 引脚复用块（GPIO_InitTypeDef 声明 → HAL_GPIO_Init）：
           * 纯 GPIO 功能（peripheral == "GPIO"）→ gpio.c 的 MX_GPIO_Init
@@ -41,14 +41,14 @@ def split_init_for_msp(init_body: str, peripheral: str) -> tuple[str, str]:
         # ① 时钟使能 → 总是 msp（最高优先级，GPIO 块内时钟也拆走）
         #    DMA 例外：STM32Cube_FW 1.28.3 的 HAL_DMA_Init 不调 HAL_DMA_MspInit（注释明确
         #    「Prior to HAL_DMA_Init() the clock must be enabled」），时钟使能若拆到 msp 就
-        #    没人调 → DMA2 时钟没使能、拷贝失败。故 DMA 时钟留在 init 体（念安 2026-08-25 上板）。
+        #    没人调 → DMA2 时钟没使能、拷贝失败。故 DMA 时钟留在 init 体（上板）。
         if re.search(r"__HAL_RCC_\w+_CLK_ENABLE\s*\(", stripped):
             if peripheral == "DMA":
                 mx_lines.append(line)
             else:
                 msp_lines.append(line)
             continue
-        # ② GPIO 块状态机（2026-08-22 念安「补完整版」：多段 GPIO 块——spi_flash 的
+        # ② GPIO 块状态机（「」：多段 GPIO 块——spi_flash 的
         #    SCK/MISO/MOSI + CS 片选复用 GPIO_InitStruct 变量，第二段无 GPIO_InitTypeDef
         #    声明，靠 GPIO_InitStruct. 赋值重新进入 GPIO 块，否则 CS 块被误归外设 .c）
         if "GPIO_InitTypeDef" in stripped or re.match(r"\s*GPIO_InitStruct\s*\.", line):
@@ -66,7 +66,7 @@ def split_init_for_msp(init_body: str, peripheral: str) -> tuple[str, str]:
 
 
 def bundle_to_mx_slots(bundle: dict[str, Any]) -> dict[str, list[str]]:
-    """单个 render 结果 → MX 范式 main.c 插槽片段（2026-08-17 范式化改造核心归一化）。
+    """单个 render 结果 → MX 范式 main.c 插槽片段（范式化改造核心归一化）。
 
     把 render() 的产物（init/loop/deinit/globals + init_func/deinit_func）转成
     generate_main_c 需要的插槽，兼容新旧两态：
@@ -271,25 +271,25 @@ def bundles_to_project_slices(bundles: list[dict[str, Any]], chip: str = DEFAULT
     main_inits: list[str] = []
     seen_inits: set[str] = set()
     main_loop: list[str] = []
-    # 系统保命 loop（念安 2026-08-24「排版顺序」）：看门狗喂狗是「保命」逻辑，不是「业务」，
+    # 系统保命 loop（「排版顺序」）：看门狗喂狗是「保命」逻辑，不是「业务」，
     # 不能被启动门挡住（否则上电启动看门狗却不喂狗 → 8 秒复位）。单独收集，注入应用层 App_Loop
     # 无条件区（在 App_Business_Run 门控之前跑）。
     system_loop: list[str] = []
     system_periphs: set[str] = set()
     defense_units: set[str] = set()
     # 关闭动作（有源器件的「关」）：启动门 toggle 到关闭时执行（蜂鸣器停/灯灭），
-    # 单独收集，注入业务层「关闭沿」清理区（念安「有始有终」——按键能开能关）。
+    # 单独收集，注入业务层「关闭沿」清理区（「」——按键能开能关）。
     off_body: list[str] = []
 
     for b in bundles:
         peripheral = str(b.get("peripheral", "") or "").strip()
-        # 防御需求收集（2026-08-23 念安「按环节绑定」）：bundle 的 defense 声明
+        # 防御需求收集（「」）：bundle 的 defense 声明
         # （如 "filter,clamp"）→ 组装层按声明注入对应防御件文件，不是全局默认开。
         for d in str(b.get("defense", "") or "").split(","):
             d = d.strip()
             if d:
                 defense_units.add(d)
-        # 归一化（2026-08-22 念安「补完整版」）：bundle peripheral 带实例号（USART1/SPI1/TIM14），
+        # 归一化（「」）：bundle peripheral 带实例号（USART1/SPI1/TIM14），
         # 而 PERIPHERAL_FILE_MAP 的 key 不带实例号（UART/SPI/TIM）——去实例号 + USART→UART/FSMC→SRAM，
         # 否则 fallback 生成错误的 HAL_USART1_MspInit（空参数 → handle 未声明）。
         _base = re.sub(r"\d+$", "", peripheral.upper())
@@ -325,10 +325,10 @@ def bundles_to_project_slices(bundles: list[dict[str, Any]], chip: str = DEFAULT
             slot["msp_fn"], slot["msp_param"] = _tim_msp_signature(init_body)
 
         # init 拆分 → 外设 .c 函数体 + hal_msp.c 时钟/引脚复用
-        # 改调用（2026-08-19 定位掰正 → 2026-08-20 6 外设铺开）：
+        # 改调用（定位掰正 → 6 外设铺开）：
         # GPIO 走 render_gpio_init_from_bundle（范式）；UART/TIM/ADC/SPI/I2C/CAN 走
         # render_periph_init_from_bundle（基础 init 单区块标准化 + 功能增量从 functional 保留，
-        # 念安「增量还是按模板走 + 分层隔离 + 优先级」）；无铺开配置的外设回退 functional 老路。
+        # 「增量还是按模板走 + 分层隔离 + 优先级」）；无铺开配置的外设回退 functional 老路。
         if peripheral == "GPIO":
             from knowledge.template_forge.block_assembler import BlockAssembler
 
@@ -344,7 +344,7 @@ def bundles_to_project_slices(bundles: list[dict[str, Any]], chip: str = DEFAULT
                 mx_init = mx_init + "\n" + gpio_increments
         else:
             if b.get("source") == "board":
-                # board 定型模板（2026-08-25 上板揪出 SPI Flash 读 FF FF FF）：
+                # board 定型模板（上板 SPI Flash 读 FF FF FF）：
                 # 定型 init 的引脚照开发板手册填死（探索者 SPI1=PB3/PB4/PB5 重映射），
                 # 直接 split_init_for_msp 拆分定型 init，不被 chip_portrait 默认引脚
                 # （PA5/PA6/PA7）覆盖。globals 已是 board 模板声明的标准句柄
@@ -393,7 +393,7 @@ def bundles_to_project_slices(bundles: list[dict[str, Any]], chip: str = DEFAULT
         if extra:
             slot["extra_code"].append(extra)
         if loop:
-            # 系统保命（念安 2026-08-24「改全面」）：模板声明 system_level=true → 保命逻辑
+            # 系统保命（「改全面」）：模板声明 system_level=true → 保命逻辑
             # （看门狗喂狗/系统软复位），提升到应用层无条件跑，不被启动门门控。材料驱动，
             # 优先读声明；旧模板无声明时按外设名兜底（IWDG/WWDG 是既有保命外设）。
             is_system = bool(b.get("system_level")) or peripheral_key in ("IWDG", "WWDG")

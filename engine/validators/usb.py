@@ -33,7 +33,7 @@ def _check_usb_start_present(ctx: dict[str, Any]) -> bool:
     return bool(re.search(r"\bHAL_(?:PCD|HCD)_Start\s*\(", code))
 
 
-# ── 参数级校验（2026-08-17 补：查"参数对不对"）──
+# ── 参数级校验（补：查"参数对不对"）──
 _USB_EP_MAX = 7  # FS 设备 8 个端点（EP0..EP7）
 
 

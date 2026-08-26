@@ -1,17 +1,17 @@
 """探针注入器：生成代码时可选埋 AS_PROBE（带芯片手册真值预期值）。
 
-念安 2026-08-23「生成代码 → 编译 → 预值指定位置 → 回传」的最后一公里：
+「生成代码 → 编译 → 预值指定位置 → 回传」的最后一公里：
 把 as_trace 探针（AS_PROBE 宏，板内对账）埋进生成的 main.c，预期值来自芯片手册真值
 （probes.expectations.build_expectations）。默认关闭（enable_trace=False），
 开了才注入；release 不定义 AS_TRACE_ENABLE 时 AS_PROBE 展开成空、零开销。
 
-探针埋点（念安「关键节点，定位很精准」）：
+探针埋点（「关键节点，定位很精准」）：
   - estack        读链接脚本栈顶符号 _estack，预期 = 手册真值（如 0x20020000）
   - flash_base    读 CMSIS 宏 FLASH_BASE
   - ram_base      读 CMSIS 宏 SRAM_BASE
   - peripheral_base 读 CMSIS 宏 PERIPH_BASE
 
-这些能抓「内存映射算错」——尤其念安举例的「128K SRAM + 64K CCM 写成连续 192K」
+这些能抓「内存映射算错」——尤其举例的「128K SRAM + 64K CCM 写成连续 192K」
 （链接脚本算出的 _estack 会偏到 0x20030000，跟手册真值 0x20020000 对不上，板内对账回传偏差）。
 
 纯函数：不 import 主项目装配逻辑，只读预期值（由调用方传入），保持可独立测试。
@@ -62,7 +62,7 @@ def build_send_fn() -> str:
     """生成发送函数（用调试串口 huart1；工程需有 usart.c 定义 huart1）。
 
     返回 HAL_UART_Transmit 的返回值（HAL_OK=0 成功，HAL_BUSY/HAL_TIMEOUT=非0 失败），
-    flush 据此判断是否丢帧——不静默吞发送失败（念安「绝不静默放行」）。
+    flush 据此判断是否丢帧——不静默吞发送失败（「绝不静默放行」）。
     timeout 用 100ms（与业务打印 hello 一致）。
     """
     return (

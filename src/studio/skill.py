@@ -48,4 +48,4 @@ class Skill(ABC):
 
     # --- 对外元数据 ---
     # 注：manifest 技能序列化统一走 registry.to_manifest_skills()（字段过滤版），
-    # 本处不保留重复的 to_manifest（2026-08-05 清理死代码时移除）。
+    # 本处不保留重复的 to_manifest（清理死代码时移除）。

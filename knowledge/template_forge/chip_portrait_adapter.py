@@ -12,7 +12,7 @@ _log = logging.getLogger(__name__)
 # 芯片肖像目录（skills/chips/）——parents[2]=项目根
 _CHIPS_DIR = Path(__file__).resolve().parents[2] / "skills" / "chips"
 
-# 默认芯片（2026-08-25 统一：与 chip_gateway._DEFAULT_CHIP / config.DEFAULT_CHIP_NAME 对齐，
+# 默认芯片（统一：与 chip_gateway._DEFAULT_CHIP / config.DEFAULT_CHIP_NAME 对齐，
 # 主开发板=探索者 stm32f407zgt6。此前 apm32f407vgt6 是最小系统板，导致 block_assembler
 # RTC 铺开匹配不到探索者画像、LSE 回退 LSI 的「芯片名混用」缺陷。）
 DEFAULT_CHIP = "stm32f407zgt6"
@@ -195,7 +195,7 @@ class ChipPortraitAdapter:
             key = f"{peri_u}{instance}"
         return (self._af_map.get("default_pins") or {}).get(key) or {}
 
-    # ---- 完整引脚查询（2026-08-09 铺平：186 信号全引脚） ----
+    # ---- 完整引脚查询（铺平：186 信号全引脚） ----
 
     def find_pins(self, signal: str) -> list[str]:
         """按信号名查所有可用引脚（full_af_map 反推表）。
@@ -210,7 +210,7 @@ class ChipPortraitAdapter:
         return [p.strip() for p in str(val).split("/") if p.strip()]
 
     def get_signal_candidates(self, signal: str) -> list[dict[str, Any]]:
-        """按信号查候选引脚（**带排序声明**，2026-08-09 念安拍板）。
+        """按信号查候选引脚（**带排序声明**，）。
 
         一类功能可能有多个可选引脚——这里声明清楚：
         "这一类有几个、都是哪些、哪个优先"。
@@ -228,7 +228,7 @@ class ChipPortraitAdapter:
         """
         pins = self.find_pins(signal)
         if not pins and signal.startswith("ADC") and "_IN" in signal:
-            # ADCx_INy 从 pin_map adc 字段反推（独立格式 "ADC1_IN0"，2026-08-25 统一到 CubeMX）
+            # ADCx_INy 从 pin_map adc 字段反推（独立格式 "ADC1_IN0"，统一到 CubeMX）
             inst = signal.split("_IN")[0].replace("ADC", "")  # ADC1_IN0 → "1"
             ch = signal.split("_IN")[1]
             pins = self.find_adc_pins(inst, ch)
@@ -276,7 +276,7 @@ class ChipPortraitAdapter:
     def find_adc_pins(self, instance: str, channel: str) -> list[str]:
         """查 ADCx_INy 的可用引脚（从 pin_map adc 字段反推）。
 
-        pin_map 的 adc 是独立格式 ["ADC1_IN0", "ADC2_IN0", "ADC3_IN0"]（2026-08-25
+        pin_map 的 adc 是独立格式 ["ADC1_IN0", "ADC2_IN0", "ADC3_IN0"]（
         统一到 CubeMX 命名，替代旧合并格式 "ADC123_IN0"）。正则 ADC(\\d+)_IN(\\d+) 兼容
         两种格式（实例号 "1" 或 "123" 都按字符展开）。
 

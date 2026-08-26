@@ -24,7 +24,7 @@ from knowledge.loaders.mx_skeleton_templates import (
     get_family_templates,
 )
 
-# 功能模板名 → HAL 外设名（hal_conf 模块启用；2026-08-09 真编译验证补充）
+# 功能模板名 → HAL 外设名（hal_conf 模块启用；真编译验证补充）
 _FUNC_TO_HAL_PERI: dict[str, str] = {
     "led_blink": "GPIO", "button_read": "GPIO", "gpio_exti": "GPIO", "gpio_multi_out": "GPIO",
     "uart_print": "UART", "uart_interrupt": "UART", "uart_dma": "UART",
@@ -37,7 +37,7 @@ _FUNC_TO_HAL_PERI: dict[str, str] = {
 }
 
 # ========== 三层架构骨架模板（应用层 / 业务层，范式级通用，不随芯片族变） ==========
-# 念安 2026-08-23 D1：生成代码从「main.c 平铺」升级为「应用/业务/驱动」三层，
+#  ：生成代码从「main.c 平铺」升级为「应用/业务/驱动」三层，
 # 依赖方向单向（应用层 → 业务层 → 驱动层）。main.c（驱动层硬件初始化）只调
 # App_Loop()（应用层），业务逻辑（原 while(1) 里的 main_loop）搬到 App_Business_Run()（业务层）。
 
@@ -176,8 +176,8 @@ void App_Business_Run(void);
 """
 
 # 启动门代码（有源器件「响/亮」才注入）：上电待机，按 KEY0 启动、再按关闭（有始有终）。
-# 纯无源回传工程（RNG/CRC/DMA/定时器/DAC）无源无噪音，不注入（念安 2026-08-25 自动测试）。
-STARTUP_GATE_CODE = """  /* 按键启动门（念安 2026-08-24 铁律）：toggle 开关——上电待机，按 KEY0 启动、
+# 纯无源回传工程（RNG/CRC/DMA/定时器/DAC）无源无噪音，不注入。
+STARTUP_GATE_CODE = """  /* 按键启动门：toggle 开关——上电待机，按 KEY0 启动、
      再按 KEY0 关闭（有始有终）。关闭沿执行 off 清理（有源器件复位：蜂鸣器停/灯灭）。 */
   static bool s_gate_was_started = false;
   if (!bsp_startup_gate_ready())
@@ -214,7 +214,7 @@ APP_BUSINESS_C_TEMPLATE = """/* USER CODE BEGIN Header */
 {peripheral_includes}
 {defense_includes}
 
-/* 非阻塞周期执行辅助（念安「改根不改表面」：业务层周期任务用 APP_EVERY_MS 判周期，
+/* 非阻塞周期执行辅助（「」：业务层周期任务用 APP_EVERY_MS 判周期，
    不用阻塞 HAL_Delay——阻塞会拖慢同层其他任务，组合模板时按键检测被 uart 打印的
    delay 拖成 1 秒一次）。_last 是 static uint32_t 上次执行时间戳。 */
 #define APP_EVERY_MS(_last, _ms) \
@@ -363,17 +363,17 @@ class MxSkeleton(IMxSkeleton):
     ) -> str:
         """生成业务层 app_business.c：外设头 include + 防御头（按环节）+ App_Business_Run。
 
-        三层架构 D1（念安 2026-08-23）：原 main.c while(1) 里的业务代码（main_loop）
+        三层架构 ：原 main.c while(1) 里的业务代码（main_loop）
         搬到业务层 App_Business_Run()，业务层不碰寄存器、只调驱动层接口。
-        defense_units（念安「按环节绑定」）：功能模板声明的防御件，按声明 include 对应头。
-        off_body（念安「有始有终」）：启动门 toggle 到关闭沿时执行的有源器件复位动作。
+        defense_units（「」）：功能模板声明的防御件，按声明 include 对应头。
+        off_body（「」）：启动门 toggle 到关闭沿时执行的有源器件复位动作。
         """
         from knowledge.template_forge.defense_injector import defense_include_lines
 
         inc_lines = "\n".join(peripheral_includes or [])
         defense_inc = "\n".join(defense_include_lines(defense_units))
         # 启动门只在「有有源器件（defense_units 含 startup_gate）」时注入；纯无源回传
-        # 工程不注入，App_Business_Run 直接跑业务（念安 2026-08-25 自动测试）。
+        # 工程不注入，App_Business_Run 直接跑业务。
         has_gate = "startup_gate" in defense_units
         gate_code = STARTUP_GATE_CODE if has_gate else ""
         return APP_BUSINESS_C_TEMPLATE.replace(
@@ -394,7 +394,7 @@ class MxSkeleton(IMxSkeleton):
 
         defs: list[str] = []
         for fn, bodies in (slot.get("init_bodies") or {}).items():
-            # 合并同名 MX_xxx_Init 函数体时去重局部变量声明（2026-08-22 念安「补完整版」：
+            # 合并同名 MX_xxx_Init 函数体时去重局部变量声明（「」：
             # 按键控制点灯 = led_blink + button_read 都声明 GPIO_InitStruct，直接拼会重复定义）
             from knowledge.template_forge.project_slicer import _strip_dup_decls
 
@@ -448,7 +448,7 @@ class MxSkeleton(IMxSkeleton):
         """生成外设 .h 文件（保护宏 + 句柄 extern + 函数原型）。"""
         guard = f"__{fname.upper()}_H"
         # extern 声明须去掉初始化器（uint32_t data[16] = {...}; → uint32_t data[16];），
-        # 否则 .h 生成 extern+初始化 = 非法重复定义（2026-08-22 全模板编译验证揪出）。
+        # 否则 .h 生成 extern+初始化 = 非法重复定义（全模板编译验证）。
         # 注意 slot["globals"] 存的是「多行字符串」合并的一个元素，须按行拆分再逐行生成。
         def _strip_init(g: str) -> str:
             g = g.strip()
@@ -465,7 +465,7 @@ class MxSkeleton(IMxSkeleton):
             protos.append(f"void {fn}(void);")
         for fn in (slot.get("deinit_bodies") or {}):
             protos.append(f"void {fn}(void);")
-        # MspInit 声明（2026-08-20 虚拟 MspInit 关键）：GPIO 无 ST 库声明
+        # MspInit 声明（虚拟 MspInit 关键）：GPIO 无 ST 库声明
         # （stm32f4xx_hal_gpio.h 无 HAL_GPIO_MspInit），gpio.c 手动调用需在此显式声明，
         # 否则 C99 报「implicit function declaration」。其余外设（UART/TIM…）ST 库已有，
         # 显式声明无害（签名与 hal_msp.c 定义一致）。
@@ -494,7 +494,7 @@ class MxSkeleton(IMxSkeleton):
     def generate_hal_msp_c(self, periphs: dict[str, dict[str, Any]]) -> str:
         """生成 hal_msp.c（HAL_MspInit + 各外设 HAL_xxx_MspInit：时钟使能 + 引脚复用）。
 
-        2026-08-23 修 F1 跨系列：F1 的 stm32f1xx_hal.h 不集中 include 外设头（F4 会按
+        修 F1 跨系列：F1 的 stm32f1xx_hal.h 不集中 include 外设头（F4 会按
         模块宏集中 include），故 hal_msp.c 需显式 include 用到的外设头
         （stm32f1xx_hal_gpio.h 等），否则 GPIO_InitTypeDef/UART_HandleTypeDef 未定义。
         F4/G4 重复 include 无害（有 include guard）。
@@ -578,7 +578,7 @@ class MxSkeleton(IMxSkeleton):
     def generate_system(self) -> str:
         """生成 system 源文件。
 
-        2026-08-14：G4 系列优先使用官方 system_stm32g4xx.c（reference-stm32g4/
+        ：G4 系列优先使用官方 system_stm32g4xx.c（reference-stm32g4/
         device/Include/，寄存器布局与 F4 不同——F4 模板用 RCC->CIR 等 G4 没有的
         寄存器）；其他族用模板参数化生成。
         """
@@ -630,7 +630,7 @@ class MxSkeleton(IMxSkeleton):
     def generate_makefile(self, chip_name: str | None = None) -> str:
         """生成标准 Makefile（GNU arm-none-eabi-gcc，编译链接 elf + hex/bin）。
 
-        2026-08-22 念安「补完整版」：标准 CubeMX 工程含 Makefile，此前 MxSkeleton 未生成，
+        「」：标准 CubeMX 工程含 Makefile，此前 MxSkeleton 未生成，
         只靠 compile_check 用 Python 调 gcc。现补全——源文件用 wildcard 自动包含
         Core/Src/*.c（外设独立文件 + hal_msp.c + it.c + system.c + main.c），
         改了源文件无需改 Makefile。
@@ -639,15 +639,15 @@ class MxSkeleton(IMxSkeleton):
         family = self._family
         defines = " ".join("-D" + d for d in family.defines)
         linker_name = self._linker_file_name(chip_name)
-        # 跨系列活接口（2026-08-22）：HAL 驱动路径/源前缀从 family 材料推导，不再写死 F4。
+        # 跨系列活接口：HAL 驱动路径/源前缀从 family 材料推导，不再写死 F4。
         # system_stm32f4xx.c → stm32f4xx；变体（STM32F4xx_F446）的 device 目录取基础系列 STM32F4xx。
         hal_prefix = family.system_file.replace("system_", "").replace(".c", "")
         device_family = family.name.split("_")[0]
         # ST 官方固件（HAL/CMSIS 头 + HAL 源），与 compile_check 同源。
-        # 2026-08-22 脱敏：env STM32_CUBE_FW 可覆盖，默认 CubeMX 标准安装路径——
+        # 脱敏：env STM32_CUBE_FW 可覆盖，默认 CubeMX 标准安装路径——
         # 开源后别人 clone 不装 ST 固件也能通过 env 指向自己的。
         st_fw = "$(HOME)/STM32Cube/Repository/STM32Cube_FW_F4_V1.28.3"
-        # 工具链自动定位（2026-08-22 念安「加个链路」）：make 直接跑会因 arm-none-eabi-gcc
+        # 工具链自动定位（「」）：make 直接跑会因 arm-none-eabi-gcc
         # 不在 PATH 而失败，故默认写死 Agent-S 内化工具链的 bin 目录（_find_arm_gcc 四级查找）。
         # 脱敏：env ARM_GCC_PATH 可覆盖，开源剥离后工具链不随仓库走，走 PATH 的 arm-none-eabi-gcc。
         gcc_bin = ""
@@ -691,7 +691,7 @@ class MxSkeleton(IMxSkeleton):
             "C_SOURCES = $(wildcard Core/Src/*.c)",
             f"ASM_SOURCES = Core/Startup/{family.startup_pattern}",
             f"HAL_SOURCES = $(filter-out %_template.c, $(wildcard $(HAL_SRC)/{hal_prefix}_hal*.c))",
-            # LL 层也 wildcard 匹配（2026-08-25 SRAM 编译揪出）：FSMC/SRAM 的 LL 层
+            # LL 层也 wildcard 匹配（SRAM 编译）：FSMC/SRAM 的 LL 层
             # （stm32f4xx_ll_fsmc.c 的 FSMC_NORSRAM_Extended_Timing_Init）此前手动只加
             # ll_sdmmc.c，漏了 ll_fsmc.c → undefined reference。LL 文件都带模块 #ifdef
             # 保护，未使能的编译成空，wildcard 全收无害，逐个手动加才容易漏。
@@ -705,7 +705,7 @@ class MxSkeleton(IMxSkeleton):
             "CFLAGS = $(CPU) $(FPU) -mthumb -O1 -g -Wall $(C_DEFS) $(C_INCLUDES)",
             "LDFLAGS = $(CPU) $(FPU) -mthumb --specs=nano.specs --specs=nosys.specs -Wl,--gc-sections -T$(LDSCRIPT)",
             "",
-            "# 编译规则（2026-08-25 根修「.o 污染」）：HAL 库 .o 隔离到工程 build/ 目录，",
+            "# 编译规则（根修「.o 污染」）：HAL 库 .o 隔离到工程 build/ 目录，",
             "# 不再落到 STM32Cube_FW/Src 共享目录——否则跨工程 .o 残留，hal_conf.h 模块使能",
             "# 不同导致「空壳 .o」被复用、HAL_xxx_Init undefined reference（系统复位编译失败根因）。",
             "HAL_OBJS = $(addprefix build/, $(notdir $(HAL_SOURCES:.c=.o)))",
@@ -752,7 +752,7 @@ class MxSkeleton(IMxSkeleton):
     def generate_startup_s(self) -> str:
         """生成启动汇编文件（按芯片族选择模板）。
 
-        2026-08-14：G4 系列优先使用官方 GCC 启动文件（reference-stm32g4/startup/，
+        ：G4 系列优先使用官方 GCC 启动文件（reference-stm32g4/startup/，
         中断向量表与 F4 不同）；找不到/其他族回退模板。
         """
         family_name = getattr(self._family, "name", "")
@@ -772,7 +772,7 @@ class MxSkeleton(IMxSkeleton):
     def generate_linker_ld(self, chip_name: str | None = None) -> str:
         """生成链接脚本，按芯片画像的 Flash/RAM/CCMRAM（材料驱动，不再写死 MEMORY_MAPS）。
 
-        2026-08-22 修 P0：此前 `_memory_map(name)` 走写死 MEMORY_MAPS（缺 G4），
+        修 P0：此前 `_memory_map(name)` 走写死 MEMORY_MAPS（缺 G4），
         G431 被兜底成 F407 的 1024/128/64 → .ld 内存分区全错。改从 self.profile
         （profile.json 权威材料）读，与 generate_main_c/generate_project_info 一致。
         """
@@ -835,7 +835,7 @@ class MxSkeleton(IMxSkeleton):
     def generate_hal_conf_h(self, enabled_modules: list[str] | None = None) -> str:
         """生成 HAL 配置头（按 family 选择 reference 模板，并按实际外设裁剪模块宏）。
 
-        2026-08-14 芯片数据扩充：模板路径按 family 的 reference 目录解析
+        芯片数据扩充：模板路径按 family 的 reference 目录解析
         （F1→reference-stm32f1 / F4→reference-stm32f4 / G4→reference-stm32g4），
         不再只查 F4 库（此前 G4 回退拿到 F4 内容 → include stm32f4xx_hal_*.h 编译失败）。
         """
@@ -898,13 +898,13 @@ class MxSkeleton(IMxSkeleton):
         for p in peripherals:
             headers.append(f"{p.lower()}.h")
 
-        # 功能模板名 → HAL 外设名（hal_conf 模块启用用；2026-08-09 真编译揪出：
+        # 功能模板名 → HAL 外设名（hal_conf 模块启用用；真编译：
         # 直接传模板名导致 HAL_UART_* 等宏未启用）
         hal_peris = [_FUNC_TO_HAL_PERI.get(p, p.upper()) for p in peripherals]
 
         files = {
             f"{base}/Core/Inc/main.h": self.generate_main_h([p.upper() for p in peripherals]),
-            # hal_conf 按功能启用 HAL 模块（2026-08-09 真编译揪出：空启只有 GPIO，
+            # hal_conf 按功能启用 HAL 模块（真编译：空启只有 GPIO，
             # TIM/ADC 等模板编译报宏未声明）
             f"{base}/Core/Inc/{family_prefix}_hal_conf.h": self.generate_hal_conf_h(hal_peris),
             f"{base}/Core/Inc/{it_h_file}": self.generate_it_h(),
@@ -922,7 +922,7 @@ class MxSkeleton(IMxSkeleton):
     def _build_manifest(self, slices: dict[str, Any]) -> str:
         """注册清单元数据（串口车间标准接口，schema 见 serial_workshop/manifest_schema.json）。
 
-        2026-08-22 念安「串口车间隔离 + 线路打通」：生产车间落盘结构化注册清单，
+        「 + 线路打通」：生产车间落盘结构化注册清单，
         串口车间读它把 trace 对齐到外设/中断/引脚。此方法不 import 串口车间，
         只负责产出 JSON——两个车间唯一的交汇点。
         """
@@ -986,7 +986,7 @@ class MxSkeleton(IMxSkeleton):
     def build_standard_project(
         self, slices: dict[str, Any], project_name: str, enable_trace: bool = False
     ) -> dict[str, str]:
-        """标准工程文件树（2026-08-18 念安拍板：严格 CubeMX 结构 + 外设独立文件）。
+        """标准工程文件树（严格 CubeMX 结构 + 外设独立文件）。
 
         slices 来自 bundles_to_project_slices：按外设分组的 init/deinit 函数体、
         hal_msp.c 时钟/引脚复用代码、main.c 的 init 调用。产物：
@@ -994,7 +994,7 @@ class MxSkeleton(IMxSkeleton):
           Core/Src/main.c + {periph}.c + hal_msp.c + it.c + system
           Core/Startup/startup.s + linker.ld + project_info.md
 
-        enable_trace（2026-08-23 念安「位置级追踪闭环」）：True 时注入 as_trace 探针
+        enable_trace（「闭环」）：True 时注入 as_trace 探针
         （AS_PROBE 板内对账，预期值=芯片手册真值），False 保持纯净（默认）。
         """
         from datetime import datetime
@@ -1009,7 +1009,7 @@ class MxSkeleton(IMxSkeleton):
 
         periphs: dict[str, dict[str, Any]] = slices.get("peripherals", {}) or {}
         # HAL 外设名（hal_conf 模块启用）——去实例号 + USART→UART / FSMC→SRAM 特例
-        # （2026-08-22 念安「补完整版」：build_standard_project 此前直接传 USART1，
+        # （「」：build_standard_project 此前直接传 USART1，
         #   生成错误的 HAL_USART1_MODULE_ENABLED，导致 UART_HandleTypeDef 未定义）
         hal_peris: list[str] = []
         for s in periphs.values():
@@ -1017,7 +1017,7 @@ class MxSkeleton(IMxSkeleton):
             if p:
                 _base = re.sub(r"\d+$", "", p.upper())
                 hal_peris.append({"USART": "UART", "FSMC": "SRAM"}.get(_base, _base))
-        # main.c 外设头文件 include（三层架构 D1：main.c 只调 App_Loop，需 include app_main.h）
+        # main.c 外设头文件 include（三层架构：main.c 只调 App_Loop，需 include app_main.h）
         peripheral_includes = ['#include "app_main.h"'] + [
             f'#include "{fname}.h"' for fname in periphs
         ]
@@ -1032,16 +1032,16 @@ class MxSkeleton(IMxSkeleton):
         )
         # 关闭动作（有源器件「关」）：启动门 toggle 到关闭沿时复位有源输出（蜂鸣器停/灯灭）
         off_body = "\n".join(slices.get("off_body", []) or [])
-        # 防御需求（念安「按环节绑定」）：功能模板 defense 声明收集，按声明绑防御件。
+        # 防御需求（「」）：功能模板 defense 声明收集，按声明绑防御件。
         # 启动门（startup_gate）只对「有有源器件（off_body 非空）」的工程注入：
         # 有源器件（蜂鸣器/灯/报警）上电会响/亮，必须按键门；纯无源回传工程（RNG/CRC/
         # DMA/定时器/DAC）无源无噪音，上电即回传，不注入启动门——否则自动测试无法按 KEY0，
-        # 门控内回传永远不跑（念安 2026-08-25 上板自动测试揪出）。
+        # 门控内回传永远不跑（上板）。
         defense_units = tuple(slices.get("defense_units", []) or [])
         if off_body.strip():
             defense_units = defense_units + ("startup_gate",)
 
-        # 中断 handler 编辑线路（2026-08-23 念安「配套文件编辑线路」）：
+        # 中断 handler 编辑线路（「」）：
         # 功能模板 init 里已 EnableIRQ，但对应的 XXX_IRQHandler 从没生成——此处从
         # 渲染后 slot 提取「使能了哪些中断 + 各外设 handle」，按范式级材料生成
         # handler 定义/原型/extern，补上「中断来了跳 Default_Handler 死循环」的缺口。
@@ -1056,7 +1056,7 @@ class MxSkeleton(IMxSkeleton):
             f"{base}/Core/Src/main.c": self.generate_main_c(
                 peripheral_includes=peripheral_includes,
                 peripheral_inits=list(slices.get("main_inits", []) or []),
-                # 三层架构 D1：main.c 的 while(1) 只调应用层 App_Loop()，
+                # 三层架构：main.c 的 while(1) 只调应用层 App_Loop()，
                 # 业务逻辑搬到 app_business.c 的 App_Business_Run()（依赖方向单向）
                 main_loop_body=["    App_Loop();"],
             ),
@@ -1065,7 +1065,7 @@ class MxSkeleton(IMxSkeleton):
             f"{base}/Core/Src/{system_c_file}": self.generate_system(),
             f"{base}/Core/Startup/{family.startup_pattern}": self.generate_startup_s(),
             f"{base}/{self._linker_file_name()}": self.generate_linker_ld(),
-            # ---- 三层架构（D1：应用层 app_main + 业务层 app_business）----
+            # ---- 三层架构（应用层 app_main + 业务层 app_business）----
             f"{base}/Core/Inc/app_main.h": APP_MAIN_H_TEMPLATE,
             f"{base}/Core/Src/app_main.c": APP_MAIN_C_TEMPLATE.replace(
                 "__SYSTEM_INCLUDES__", system_includes
@@ -1086,13 +1086,13 @@ class MxSkeleton(IMxSkeleton):
             files[f"{base}/Core/Src/{fname}.c"] = self.generate_periph_c(fname, slot)
             files[f"{base}/Core/Inc/{fname}.h"] = self.generate_periph_h(fname, slot)
 
-        # 防御件注入（2026-08-23 念安「按环节绑定」）：按 slices 收集的 defense 需求
+        # 防御件注入（「」）：按 slices 收集的 defense 需求
         # 注入对应防御件文件——走到哪个环节需要哪个防御件就绑哪个，不是全局默认开。
         from knowledge.template_forge.defense_injector import inject_defense_files
 
         inject_defense_files(files, base, units=defense_units)
 
-        # 探针注入（可选，2026-08-23 念安「位置级追踪闭环」最后一公里）
+        # 探针注入（可选，「闭环」最后一公里）
         if enable_trace:
             from infrastructure.config import CHIPS_DIR
             from knowledge.template_forge.trace_injector import apply_trace

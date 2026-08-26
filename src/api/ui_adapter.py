@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 # 运行时 UI 状态（模式开关、当前 MCU 等）
 # mcu 默认值取自基础设施配置（AGENT_S_CHIP_NAME 环境变量，默认 APM32F407VGT6）
-# 2026-08-06 加锁：ThreadingHTTPServer 多线程读写 force_* 互斥逻辑需原子化
+# 加锁：ThreadingHTTPServer 多线程读写 force_* 互斥逻辑需原子化
 _ui_state: dict[str, Any] = {
     "mcu": DEFAULT_CHIP_NAME,
     "force_chat": False,
@@ -71,7 +71,7 @@ def _sse_event(data: dict[str, Any]) -> bytes:
 async def code_generate(workspace: Any, data: dict[str, Any]) -> dict[str, Any]:
     """兼容 /api/code/generate。
 
-    Agent-E 通过 E→S 通道调用（2026-08-05 对接）：E 传
+    Agent-E 通过 E→S 通道调用（对接）：E 传
     {intent, mcu, peripherals, emotion_context, thinking_chain, detail_level}。
     peripherals 透传给 code_gen 流水线（未来多外设消费），
     返回统一 E 契约 {status, code, explanation, warnings}，并保留旧 {code, passed, logs}。
@@ -88,9 +88,9 @@ async def code_generate(workspace: Any, data: dict[str, Any]) -> dict[str, Any]:
         "requirement": intent,
         "mcu": mcu,
         "peripherals": peripherals,
-        # E→S 衔接通道（2026-08-12）：透传 R1 思考链（会话级），生成时注入参考
+        # E→S 衔接通道：透传 R1 思考链（会话级），生成时注入参考
         "thinking_chain": data.get("thinking_chain", ""),
-        # 2026-08-18 修复（断链）：此前 session_id/emotion_context 被忽略，E 发了 S 没接。
+        # 修复（断链）：此前 session_id/emotion_context 被忽略，E 发了 S 没接。
         # 现贯通 session_id（会话缓存 thought_context）+ emotion_context（情感上下文）。
         "session_id": data.get("session_id", ""),
         "emotion_context": data.get("emotion_context", ""),
@@ -236,7 +236,7 @@ def set_mute(data: dict[str, Any]) -> dict[str, Any]:
 
 
 def voice_speak(data: dict[str, Any]) -> dict[str, Any]:
-    """兼容 /api/voice/speak。2026-08-06 上线：edge-tts 生成音频返回 URL（UI 播放）。
+    """兼容 /api/voice/speak。上线：edge-tts 生成音频返回 URL（UI 播放）。
 
     未安装 edge-tts / 生成失败时返回 not_implemented，UI 回退浏览器 TTS。
     """

@@ -47,7 +47,7 @@ _gpio_deinit_complete = make_deinit_clk_off_validator(
 def _gpio_mode_mismatch(ctx: Any) -> bool:
     """检查 GPIO 模式配置是否一致：输出模式需要 Speed，输入模式不应配 Speed。
 
-    2026-08-13 修复（冒烟实证 R_GPIO_INIT_002 误报）：此前按"代码级"判断——
+    修复（冒烟实证 R_GPIO_INIT_002 误报）：此前按"代码级"判断——
     代码里同时有输入结构（EXTI 中断）和输出结构（带 Speed）时误报；
     改为按 Init 结构分组判断，每个结构独立校验。
     """
@@ -70,7 +70,7 @@ def _gpio_mode_mismatch(ctx: Any) -> bool:
 def _gpio_irq_pending(ctx: Any) -> bool:
     """检查中断服务函数中是否清除了 EXTI 挂起位。
 
-    2026-08-18 能力预判修复：has_clear 只认「显式清除挂起位」的宏/函数
+    能力预判修复：has_clear 只认「显式清除挂起位」的宏/函数
     （__HAL_GPIO_EXTI_CLEAR_IT / HAL_GPIO_EXTI_ClearIT），不再把
     HAL_GPIO_EXTI_IRQHandler（仅分发回调、不清挂起位）误当清除。
     """

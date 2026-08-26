@@ -28,7 +28,7 @@ class ResourceAdapter:
     _symbol_names: dict[str, set[str]] = {}    # chip → 符号名集合
 
     def __init__(self, chip: str | None = None) -> None:
-        # 芯片系列动态对接（2026-08-22 修跨系列断层）：不再写死 F4，由 chip_gateway 解析。
+        # 芯片系列动态对接（修跨系列断层）：不再写死 F4，由 chip_gateway 解析。
         self._chip = chip or gateway.default_chip()
         self._hal: Any = None
         self._external: Any = None

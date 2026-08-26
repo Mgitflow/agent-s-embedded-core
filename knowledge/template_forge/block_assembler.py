@@ -1,6 +1,6 @@
 """单区块拼装器（Block Assembler）。
 
-念安 2026-08-19「定位掰正」的地基：
+「定位掰正」的地基：
 
     模板三层定位：
       空壳模板  = 芯片骨架（不参与拼装，只做工程空壳）
@@ -125,7 +125,7 @@ class BlockAssembler:
            "msp_code": "__HAL_RCC_GPIOx_CLK_ENABLE();"}       # hal_msp.c 虚拟 HAL_GPIO_MspInit 的时钟
         """
         init = str(bundle.get("init", "") or "")
-        # 开放式扫描（2026-08-23 念安「堆叠逻辑」）：GPIO 初始化是「可多个」的材料，不限条数——
+        # 开放式扫描（「堆叠逻辑」）：GPIO 初始化是「可多个」的材料，不限条数——
         # 扫描监测所有 HAL_GPIO_Init 段 → 逐段适配渲染 → 过滤堆叠，直到扫完。
         # 单端口/多端口走同一条路径，不再「一对一/枚举」分支（原来只反推第一个端口，漏掉后面的）。
         segments = self._parse_gpio_ports(init)
@@ -175,7 +175,7 @@ class BlockAssembler:
     def _render_multi_port_gpio(ports: list[dict[str, str]], init: str) -> dict[str, Any]:
         """GPIO 初始化段 → MX_GPIO_Init（开放式：不限段数，单/多端口统一走这里）。
 
-        架构层堆叠逻辑（2026-08-23 念安）：扫描出的每个端口段依次适配成标准
+        架构层堆叠逻辑：扫描出的每个端口段依次适配成标准
         GPIO_InitStruct 配置 + HAL_GPIO_Init，时钟使能拆进 msp_code，初始 WritePin
         原样保留。不写死端口数——1 个、N 个都是同一条循环。
         """
@@ -220,7 +220,7 @@ class BlockAssembler:
         """
         sem: dict[str, Any] = {}
         # port 从 HAL_GPIO_Init(GPIOx, 或虚拟 MspInit 的 HAL_GPIO_MspInit(GPIOx) 提取
-        # （2026-08-20 虚拟 MspInit 后，时钟使能 __HAL_RCC_GPIOx_CLK_ENABLE 已拆进 msp，不再在 init 体）
+        # （虚拟 MspInit 后，时钟使能 __HAL_RCC_GPIOx_CLK_ENABLE 已拆进 msp，不再在 init 体）
         m = re.search(r"HAL_GPIO_Init\(GPIO([A-IK]),", code) or re.search(
             r"HAL_GPIO_MspInit\(GPIO([A-IK])\)", code
         )
@@ -322,12 +322,12 @@ class BlockAssembler:
         return {"match": not diff, "spread": spread_sem, "sample": sample_sem, "diff": diff}
 
     def render_periph_init_from_bundle(self, peripheral: str, bundle: dict[str, Any], chip: str = DEFAULT_CHIP) -> dict[str, Any] | None:
-        """6 外设铺开（2026-08-20）：从 functional bundle 反推参数 → 单区块渲染基础 init → 增量保留。
+        """6 外设铺开：从 functional bundle 反推参数 → 单区块渲染基础 init → 增量保留。
 
         GPIO 已由 render_gpio_init_from_bundle 做范式，本方法把 UART/TIM/ADC/SPI/I2C/CAN
         同样改调用到单区块（变量名标准化 + 基础 init），functional 退居证明样本。
 
-        分层（念安 8-20「增量还是按模板走 + 分层隔离 + 优先级」）：
+        分层（「增量还是按模板走 + 分层隔离 + 优先级」）：
           - 基础 init（时钟+句柄+Init+引脚复用）→ 单区块渲染标准化（htim/huart + _hal 命名）
           - 功能增量（NVIC/Receive_IT、OC 配置/PWM_Start）→ 从 functional init 保留（extract_increments）
           - 增量依赖变量（rx_byte 等）→ 从 functional globals 保留（extract_increment_globals）
@@ -345,7 +345,7 @@ class BlockAssembler:
             extract_pin_mux,
         )
 
-        # 规范化（2026-08-24 能力配置架构化）：board 模板 peripheral 带实例号
+        # 规范化（能力配置架构化）：board 模板 peripheral 带实例号
         # （ADC1/CAN1/USART1/TIM14），functional 不带（ADC/CAN/UART/TIM）——统一去实例号 +
         # USART→UART + FSMC→SRAM，否则 board 外设匹配不到 _PERIPH_DERIVE → 回退老路，
         # 能力配置（ConfigChannel/ConfigFilter）就无法从 .tmpl 唯一出口生成。
@@ -356,7 +356,7 @@ class BlockAssembler:
         if entry is None:
             return None
         init = str(bundle.get("init", "") or "")
-        # 复杂增量回退（2026-08-22 全模板编译验证揪出）：DMA 扫描（__HAL_LINKDMA）含
+        # 复杂增量回退（全模板编译验证）：DMA 扫描（__HAL_LINKDMA）含
         # 「辅助外设句柄配置」，extract_increments 的正则无法区分 ADC/DMA 的 .Init 配置 →
         # 丢变量声明/配置 → 编译失败。回退 functional 老路（split_init_for_msp 保留完整 init）。
         # CAN 过滤器已补增量标记（CAN_FilterTypeDef + .Filter 配置），不在此回退之列。
@@ -365,7 +365,7 @@ class BlockAssembler:
         derive_fn, init_func_fmt, deinit_func_fmt, globals_fmt = entry
         params = derive_fn(init)  # 反推用户可指定关键参数（instance + 数值），其余 meta default 兜底
         instance = params.get("instance", "1")
-        # chip 贯穿（2026-08-24 修断链）：单区块渲染须带真实 chip——fill_block 的芯片自适应
+        # chip 贯穿（修断链）：单区块渲染须带真实 chip——fill_block 的芯片自适应
         # （prescaler/period）与板卡画像驱动（RTC LSE）都依赖正确 chip。此前用默认 apm32f407vgt6，
         # RTC 铺开时匹配不到探索者板（meta.mcu=stm32f407zgt6）→ LSE 判断回退 LSI。
         code = self.render_init(peripheral.lower(), params, chip)

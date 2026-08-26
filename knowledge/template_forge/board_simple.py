@@ -1,11 +1,11 @@
 """开发板简单逻辑模板渲染器：读 boards/<board>/simple_templates.json，匹配需求，渲染定型代码。
 
-念安 8-20「简单逻辑模板」= 开发板肖像的代码化：探索者每个资源一套最简逻辑
+「简单逻辑模板」= 开发板肖像的代码化：探索者每个资源一套最简逻辑
 （照开发板手册填的定型代码，引脚/有效电平固定，非参数化）。区别于 functional
 通用模板（参数化/GPIO 池，管零散芯片自研场景）——本模板是「快速出活」的定型
 代码，对应「开发板规矩被开发商定死了、照手册填」的分层。
 
-触发（念安 8-20 拍板「复用 chip、不加 board」）：chip 参数 → board.json（按
+触发（「复用 chip、不加 board」）：chip 参数 → board.json（按
 meta.mcu 匹配）→ simple_templates.json → 匹配需求 → 渲染定型代码。有模板则用，
 无模板（或非开发板芯片）回落 functional 通用。
 """
@@ -61,7 +61,7 @@ def match_simple_template(text: str, templates: dict[str, Any]) -> str | None:
 def match_all_simple(text: str, templates: dict[str, Any]) -> list[str]:
     """多需求 → 模板 id 列表（更长关键词优先，避免短关键词误匹配）。
 
-    二次开发（念安 8-20「插新逻辑 + 冲突重查」）的多需求识别：文本里提到几个
+    二次开发（「插新逻辑 + 冲突重查」）的多需求识别：文本里提到几个
     功能就匹配几个模板（"点灯+按键" → [led_blink, key_press]）。
 
     去重规则：
@@ -90,7 +90,7 @@ def match_all_simple(text: str, templates: dict[str, Any]) -> list[str]:
         matched.append(tid)
         matched_kws.append(kw)
         seen.add(tid)
-    # 自动带串口（2026-08-23 深化测试「外设无回传」修复）：
+    # 自动带串口（深化测试「外设无回传」修复）：
     # 命中「有结果要回传」的外设模板（requires_uart），自动附加 uart_print，
     # 让读到的结果能串口打出来、上板能看见——不靠用户手动组合「+ 串口打印」。
     if "uart_print" in templates and "uart_print" not in matched:
@@ -128,7 +128,7 @@ def render_simple_template(tid: str, templates: dict[str, Any]) -> dict[str, Any
 
     级联模板（cascade 字段）例外：cascade 配置是「连接效果」的单一权威源，
     init/loop 用 ${pin_port}/${offset} 等占位符，此处按 cascade 配置派生参数渲染
-    （级联层 = 开发板定型 ↔ 单一模块之间的过渡，念安 2026-08-24）。
+    （级联层 = 开发板定型 ↔ 单一模块之间的过渡，）。
     """
     tpl = templates.get(tid)
     if not tpl:
@@ -157,12 +157,12 @@ def render_simple_template(tid: str, templates: dict[str, Any]) -> dict[str, Any
         "loop": loop,
         "deinit": tpl.get("deinit", ""),
         # 关闭动作（有源器件的「关」）：启动门 toggle 到关闭时执行（蜂鸣器停/灯灭），
-        # 「有始有终」——念安 2026-08-24「按键调试能开能关，不是一次性置位」。
+        # 「」——「按键调试能开能关，不是一次性置位」。
         "off": off,
     }
 
 
-# 级联渲染已抽到通用模块 cascade.py（两阵营共用，2026-08-25）
+# 级联渲染已抽到通用模块 cascade.py（两阵营共用，）
 from knowledge.template_forge.cascade import (  # noqa: E402
     derive_cascade_params as _derive_cascade_params,
     render_cascade_section as _render_cascade_section,

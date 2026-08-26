@@ -37,7 +37,7 @@ def score_code(code: str, template_used: str = "", expected: list[str] | None = 
     m["compileable"] = has_main and has_error
     # 5. 代码量
     m["lines"] = len(code.splitlines())
-    # 6. 总分（2026-08-17 评分合理化）：
+    # 6. 总分（评分合理化）：
     #   - 去重复计分：原 compileable（has_main&&has_error）与 complete 里的 has_main/has_error 重复给分
     #   - intent_match 权重 5→10：评分应区分「能编译的垃圾」和「真正实现功能」，
     #     对齐「端到端通 ≠ 达到预期通」的口径——功能正确性权重应高于结构完整
@@ -52,7 +52,7 @@ def score_code(code: str, template_used: str = "", expected: list[str] | None = 
 def _api_exists(call: str) -> bool:
     """HAL API 存在性粗检（resource_adapter 全库白名单）。
 
-    2026-08-18 修复：validate_api_names 用正则 `\\b(HAL_\\w+)\\s*\\(` 提取调用，
+    修复：validate_api_names 用正则 `\\b(HAL_\\w+)\\s*\\(` 提取调用，
     必须带括号才匹配——此前传裸 API 名（无括号）匹配不到、恒判「存在」，
     假 API 检测完全失效（score_code 的 api_real 假绿）。补 "(" 再校验。
     """
@@ -61,7 +61,7 @@ def _api_exists(call: str) -> bool:
 
         return ResourceAdapter().validate_api_names(call + "(", "") == []
     except Exception:  # noqa: BLE001 —— fail-closed：校验器异常按「API 未知」处理，不静默放行
-        return False  # 2026-08-17 修复：此前返回 True（放行），校验器坏则所有 API 判存在、评分失真
+        return False  # 修复：此前返回 True（放行），校验器坏则所有 API 判存在、评分失真
 
 
 def archive_discarded(entry: str, text: str, code: str, score: float, reason: str) -> Path | None:

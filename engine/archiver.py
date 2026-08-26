@@ -10,7 +10,7 @@ from typing import Any
 
 logger = logging.getLogger(__name__)
 
-# 归档根：WORKSPACE_ROOT/archive（念安 8-21「编译产物放项目外」——
+# 归档根：WORKSPACE_ROOT/archive（「」——
 # WORKSPACE_ROOT 默认项目外 <parent>/agent-s-output/，AGENT_S_WORKSPACE 可覆盖）。
 # 修复：此前硬编码 output/archive，注释声称支持 AGENT_S_WORKSPACE 但代码没实现（孤岛）。
 from infrastructure.config import WORKSPACE_ROOT as _WORKSPACE_ROOT  # noqa: E402
@@ -24,7 +24,7 @@ _BUILD_EXTS = {".elf", ".hex", ".bin", ".map", ".lst"}
 _FIRMWARE_ORDER = (".hex", ".bin", ".elf")
 
 # 归档保留上限：按修改时间保留最近 N 个归档单元，超出自动裁剪（防 output/ 无限膨胀）。
-# 2026-08-17 念安拍板：归档必须带保留策略，不能只进不出（此前 1.2GB 失控）。
+# ：归档必须带保留策略，不能只进不出（此前 1.2GB 失控）。
 MAX_ARCHIVE_UNITS = 100
 
 
@@ -57,7 +57,7 @@ def archive_project(
 
         root = Path(archive_root) if archive_root else _ARCHIVE_ROOT
         name = proj.name.strip("_-") or "stm32_project"
-        # 2026-08-17 产出分支分类：按 a/b/c 分支分子目录，默认 auto
+        # 产出分支分类：按 a/b/c 分支分子目录，默认 auto
         branch = (branch or "auto").strip() or "auto"
         # 时间戳含微秒：同一秒多次归档也不冲突
         project_id = f"{name}_{datetime.now().strftime('%Y%m%d_%H%M%S_%f')}"
@@ -84,7 +84,7 @@ def archive_project(
             json.dumps(info, ensure_ascii=False, indent=2), encoding="utf-8"
         )
 
-        # ③ 原形分层存放（2026-08-16 念安拍板：不打包 zip——原形直接烧录/查看，避免解压；
+        # ③ 原形分层存放（不打包 zip——原形直接烧录/查看，避免解压；
         #    HAL 库 Drivers/ 已在上游排除，不进归档，故散文件原形本身不大）
 
         # ④ 更新索引
@@ -234,7 +234,7 @@ def query_index(
 def prune_archive(*, max_units: int = MAX_ARCHIVE_UNITS, archive_root: str | Path | None = None) -> dict[str, Any]:
     """裁剪归档：按修改时间保留最近 max_units 个归档单元，删除更旧的（防无限膨胀）。
 
-    2026-08-17 分支结构适配：归档单元在 root/{branch}/{project_id}/（branch=a/b/c/auto），
+    分支结构适配：归档单元在 root/{branch}/{project_id}/（branch=a/b/c/auto），
     同时兼容旧的 root/{project_id}/ 平铺单元；跳过 source/ 与 index.json，失败安全。
     """
     root = Path(archive_root) if archive_root else _ARCHIVE_ROOT

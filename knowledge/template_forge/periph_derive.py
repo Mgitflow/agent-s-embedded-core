@@ -1,6 +1,6 @@
 """外设参数反推（6 外设铺开框架）。
 
-职责单一（2026-08-20 解耦）：只做「从 functional 渲染后的 init 代码反推用户可指定关键参数」
+职责单一（解耦）：只做「从 functional 渲染后的 init 代码反推用户可指定关键参数」
 （instance + 数值参数），供 BlockAssembler.render_periph_init_from_bundle 做单区块铺开。
 单区块渲染/对照校验归 block_assembler，本模块不碰。
 
@@ -38,7 +38,7 @@ def _derive_tim_params(init: str) -> dict[str, Any]:
         p["period_hal"] = m.group(1)
     if m := re.search(r"CounterMode\s*=\s*(TIM_COUNTERMODE_\w+)", init):
         p["countermode_hal"] = m.group(1)
-    # 通道配置参数（能力配置架构化 2026-08-24）：通道号 + 占空比，供 fill_block 生成
+    # 通道配置参数（能力配置架构化）：通道号 + 占空比，供 fill_block 生成
     # tim_channel_setup 代码段（内置单区块，不靠正则从 functional 猜增量）。
     if m := re.search(r"TIM_CHANNEL_(\d+)", init):
         p["channel"] = m.group(1)
@@ -91,7 +91,7 @@ def _derive_adc_params(init: str) -> dict[str, Any]:
     GPIO 引脚从 init 的「模拟模式 GPIO 配置段」反推（不是芯片画像）——开发板模板的
     ADC 引脚是定型代码（如探索者电位器 PA5），functional 是渲染后的实际引脚，从模板
     本身反推才能保证「通道」和「引脚」永远一致；芯片画像反推的是「单独芯片的默认引脚」，
-    在开发板场景会顶掉定型引脚（念安 2026-08-24 纠正）。
+    在开发板场景会顶掉定型引脚（纠正）。
     """
     p: dict[str, Any] = {}
     if m := re.search(r"ADC(\d+)", init):
@@ -139,13 +139,13 @@ _PERIPH_DERIVE: dict[str, tuple[Any, str, str, str]] = {
     "I2C": (_derive_instance_params(r"I2C(\d+)"), "MX_I2C{instance}_Init", "MX_I2C{instance}_DeInit", "I2C_HandleTypeDef hi2c{instance};"),
     "CAN": (_derive_can_params, "MX_CAN{instance}_Init", "MX_CAN{instance}_DeInit", "CAN_HandleTypeDef hcan{instance};"),
     # RTC 单实例（STM32F4 仅一个 RTC）：init_func 无 {instance} 后缀，globals 无编号。
-    # 2026-08-24 纳入铺开——此前 RTC 不在铺开表，走 functional 老路，rtc_init.tmpl 是死模板
+    # 纳入铺开——此前 RTC 不在铺开表，走 functional 老路，rtc_init.tmpl 是死模板
     # （且缺 LSE 使能）。纳入后基础 init 走单区块（含板卡画像驱动的 LSE 能力），
     # SetTime/SetDate 业务逻辑作为增量从 functional 保留。
     "RTC": (_derive_rtc_params, "MX_RTC_Init", "MX_RTC_DeInit", "RTC_HandleTypeDef hrtc;"),
 }
 
-# ── 增量识别（2026-08-20 念安「增量还是按模板走 + 分层隔离 + 优先级」）──────────
+# ── 增量识别（「增量还是按模板走 + 分层隔离 + 优先级」）──────────
 # 铺开时单区块只渲染「基础 init」（时钟+句柄+Init+引脚复用），functional 的「功能增量」
 # （NVIC/Receive_IT、OC 配置/PWM_Start 等）不在单区块模板里，须从 functional init 保留。
 # 增量识别：按 HAL 调用/配置宏逐行匹配「基础 init 之外的功能代码行」。
@@ -156,10 +156,10 @@ _INCREMENT_MARKERS: dict[str, list[str]] = {
     "TIM": [
         # OC/IC 通道配置（TIM_OC_InitTypeDef/.OCMode/.Pulse/.OCPolarity/.OCFastMode/
         # HAL_TIM_PWM_ConfigChannel/HAL_TIM_IC_ConfigChannel）已内置 tim_init.tmpl
-        # 的 ${tim_channel_setup} 插槽（能力配置架构化 2026-08-24），不再靠正则猜增量——
+        # 的 ${tim_channel_setup} 插槽（能力配置架构化），不再靠正则猜增量——
         # 否则 IC 输入捕获的 ConfigChannel 因缺标记整个丢失。
         r"HAL_TIM_PWM_Start", r"HAL_TIM_OC_Start", r"HAL_TIM_IC_Start",
-        # 中断增量（2026-08-23 对称修复）：UART/ADC/SPI/I2C/CAN 都有 HAL_NVIC_\w+，
+        # 中断增量（对称修复）：UART/ADC/SPI/I2C/CAN 都有 HAL_NVIC_\w+，
         # 唯独 TIM 漏了 → tim_periodic/tim_input_capture 的 NVIC+Start_IT 被丢，
         # 中断根本不会使能（更谈不上 IRQHandler 生成）。
         r"HAL_NVIC_\w+", r"HAL_TIM_Base_Start_IT",
@@ -167,7 +167,7 @@ _INCREMENT_MARKERS: dict[str, list[str]] = {
     "ADC": [
         r"HAL_NVIC_\w+", r"HAL_ADC_Start", r"HAL_ADC_Start_IT", r"HAL_ADC_Start_DMA",
         r"HAL_DMA_Init", r"__HAL_LINKDMA",
-        # HAL_ADC_ConfigChannel 已内置 adc_init.tmpl（能力配置架构化 2026-08-24），
+        # HAL_ADC_ConfigChannel 已内置 adc_init.tmpl（能力配置架构化），
         # 不再靠「从 functional 样本正则猜增量」——否则 functional 漏 ConfigChannel 就丢功能。
     ],
     "SPI": [r"HAL_NVIC_\w+", r"HAL_SPI_Transmit", r"HAL_SPI_Receive"],
@@ -175,10 +175,10 @@ _INCREMENT_MARKERS: dict[str, list[str]] = {
     "CAN": [
         r"HAL_NVIC_\w+", r"HAL_CAN_Start", r"HAL_CAN_ActivateNotification",
         # HAL_CAN_ConfigFilter / CAN_FilterTypeDef / .Filter* 已内置 can_init.tmpl
-        # （能力配置架构化 2026-08-24），不再靠正则从 functional 猜增量。
+        # （能力配置架构化），不再靠正则从 functional 猜增量。
     ],
     # RTC 增量：时间/日期结构声明 + SetTime/SetDate 业务（基础 init 时钟源已由 rtc_init.tmpl 覆盖，
-    # 不在此增量之列）。2026-08-24 纳入铺开后，业务逻辑从 functional 保留。
+    # 不在此增量之列）。纳入铺开后，业务逻辑从 functional 保留。
     "RTC": [
         r"RTC_TimeTypeDef", r"RTC_DateTypeDef", r"HAL_RTC_SetTime", r"HAL_RTC_SetDate",
         r"RTC_WEEKDAY_", r"rtc_sTime\.", r"rtc_sDate\.",

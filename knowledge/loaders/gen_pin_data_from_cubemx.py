@@ -1,6 +1,6 @@
 """从 CubeMX 数据库 XML 全量重建 pin_map 源数据（PIN_DATA/PF_DATA/PG_DATA）。
 
-念安 2026-08-25 定调「写法统一根据 MX 命名」+「数据库重建补缺失」。
+ 「写法统一根据 MX 命名」+「数据库重建补缺失」。
 CubeMX 数据库（db/mcu/STM32F407Z(E-G)Tx.xml）= 单一权威材料源，本脚本解析它，
 按命名前缀分类到 functions/adc/dac/special，生成 build_pin_map.py 用的 PIN_DATA 源码。
 

@@ -1,10 +1,10 @@
 """标准 STM32 HAL 的 MSP 签名权威表 + 对照校验（防漂移锁）。
 
-背景：2026-08-20 发现 P0 功能性 bug——`PERIPHERAL_FILE_MAP["GPIO"]` 把 MSP 签名
+背景：发现 P0 功能性 bug——`PERIPHERAL_FILE_MAP["GPIO"]` 把 MSP 签名
 写成 ``GPIO_InitTypeDef* GPIO_Init``（类型错，应是 ``GPIO_TypeDef*``），且把 GPIO
 时钟拆进 hal_msp.c 的 ``HAL_GPIO_MspInit``。但 STM32 F4 HAL 的 **GPIO 没有 MspInit
 回调**（CRC/RNG 等都有 ``__weak HAL_xxx_MspInit``，唯独 GPIO 没有，ST 未为 GPIO
-设计 MSP 层）。修法（念安定）：**虚拟一个 HAL_GPIO_MspInit**——GPIO 结构上和其他
+设计 MSP 层）。修法（定）：**虚拟一个 HAL_GPIO_MspInit**——GPIO 结构上和其他
 外设统一（时钟拆 msp），由 MX_GPIO_Init 手动调用它（因为 HAL 不自动调），签名对齐
 其他外设的 ``xxx_HandleTypeDef*`` 风格。
 

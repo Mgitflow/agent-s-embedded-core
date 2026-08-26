@@ -13,7 +13,7 @@ from typing import Any
 
 _log = logging.getLogger(__name__)
 
-# 共享知识库根（2026-08-19 集中化：AGENT_SHARED_KB > config 统一默认，不再写死 E:/Code）
+# 共享知识库根（集中化：AGENT_SHARED_KB > config 统一默认，不再写死 E:/Code）
 try:
     from infrastructure.config import SHARED_KB_ROOT as _CFG_KB_ROOT
 
@@ -57,7 +57,7 @@ class KnowledgeSync:
                 shutil.copy2(f, tpl_dst / f.name)
                 result["files"].append(f"chip_portraits/{chip}/templates/{f.name}")
 
-        # 3. 参考范本归档（一举两用：模板库一员 + 核验标尺，2026-08-09 补断点）
+        # 3. 参考范本归档（一举两用：模板库一员 + 核验标尺，补断点）
         ref_dst = chip_dir / "reference"
         ref_src = S_ROOT / "knowledge" / "template_forge" / "forge_templates" / "reference"
         if ref_src.exists():
@@ -123,7 +123,7 @@ class KnowledgeSync:
 
         return f"""# 芯片肖像：{chip}
 
-> 共享知识库芯片肖像区（2026-08-09 知识库融合，念安拍板）
+> 共享知识库芯片肖像区（知识库融合，）
 > 来源：Agent-S 模板锻造线细化产物，归入图书馆共享。
 
 ## 这是什么

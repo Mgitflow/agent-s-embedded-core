@@ -28,7 +28,7 @@ class IAssessor(ABC):
 class IPromptManager(Protocol):
     """Prompt 管理器协议：构建各类提示词（Planner/Generator 依赖）。
 
-    2026-08-20 契约强类型：替代 set_prompt_manager(pm: Any) 的 Any。
+    契约强类型：替代 set_prompt_manager(pm: Any) 的 Any。
     agents.prompt_manager.core.PromptManager 通过结构子类型满足本协议。
     """
 

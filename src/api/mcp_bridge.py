@@ -100,7 +100,7 @@ def make_mcp_handler(bridge: McpBridge) -> type:
 
 
 def serve(bridge: McpBridge, host: str = "127.0.0.1", port: int = 8102) -> ThreadingHTTPServer:
-    """启动 MCP 桥（默认 8102，81 系列子机端口段，2026-08-12 修正注释；SE 主服务 8006/身份 8106）。"""
+    """启动 MCP 桥（默认 8102，81 系列子机端口段，修正注释；SE 主服务 8006/身份 8106）。"""
     server = ThreadingHTTPServer((host, port), make_mcp_handler(bridge))
     _log.info("MCP bridge listening on http://%s:%d/mcp", host, port)
     return server

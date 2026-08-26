@@ -104,7 +104,7 @@ PIN_DATA: dict[str, dict[str, Any]] = {
     # 82 GPIO = PA-PE 各 16（80）+ PH0-OSC_IN + PH1-OSC_OUT（2，可作 GPIO）。
     # 18 非 GPIO = VDD×5 + VSS×4 + VDDA + VSSA + VREF+ + VREF- + VBAT +
     #              NRST + BOOT0 + VCAP1 + VCAP2。多路电源合并为单键 + notes 标注。
-    # PH0/PH1 与 OSC_IN/OSC_OUT 是同一物理引脚（合并，2026-08-09 复查修正）。
+    # PH0/PH1 与 OSC_IN/OSC_OUT 是同一物理引脚（合并，复查修正）。
     "VDD": {"functions": [], "special": "POWER", "notes": "数字电源 3.3V（LQFP100 共 5 路 VDD，合并标注）"},
     "VSS": {"functions": [], "special": "GROUND", "notes": "数字地（LQFP100 共 4 路 VSS，合并标注）"},
     "VDDA": {"functions": [], "special": "POWER", "notes": "模拟电源 3.3V"},
@@ -182,7 +182,7 @@ if __name__ == "__main__":
     pin_map = build_pin_map(out)
     af = generate_af_map(pin_map)
     af_out = Path("skills/chips/apm32f407vgt6/af_map.json")
-    af_out.write_text(json.dumps({"comment": "完整 AF 映射（pin_map 自动反推，2026-08-09 铺平）", "af_numbers": _load_af_numbers(), "default_pins": _load_default_pins(), "full_af_map": af}, ensure_ascii=False, indent=2), encoding="utf-8")
+    af_out.write_text(json.dumps({"comment": "完整 AF 映射（pin_map 自动反推，铺平）", "af_numbers": _load_af_numbers(), "default_pins": _load_default_pins(), "full_af_map": af}, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"pin_map: {len(pin_map)} 引脚")
     print(f"af_map 反推: {len(af)} 个信号")
     gpio_count = sum(1 for p in pin_map if p.startswith('P') and p[1] in 'ABCDE' and not p.startswith('PH'))

@@ -84,7 +84,7 @@ _PERI_TO_HEADER_SUFFIX = {
     "spdifrx": "hal_spdifrx.h",
     "swpmi": "hal_swpmi.h",
     "uart_legacy": "hal_uart.h",
-    # G4 新外设 + 核心模块（2026-08-23 补，丢手册材料提取白名单需要）
+    # G4 新外设 + 核心模块（补，丢手册材料提取白名单需要）
     "comp": "hal_comp.h",
     "opamp": "hal_opamp.h",
     "cordic": "hal_cordic.h",
@@ -103,7 +103,7 @@ class HalParser:
     """HAL 库解析器：从 26 万行库提取外设 API 骨架。"""
 
     def __init__(self, hal_dir: Path | str | None = None, chip: str | None = None) -> None:
-        # 芯片系列动态对接（2026-08-22 修跨系列断层）：不再写死 stm32f4xx，
+        # 芯片系列动态对接（修跨系列断层）：不再写死 stm32f4xx，
         # 由 chip_gateway 按芯片名解析 hal_prefix（stm32f4xx/f1xx/g4xx）与 reference 库目录。
         self._chip = chip or gateway.default_chip()
         self._hal_prefix = gateway.hal_prefix(self._chip)

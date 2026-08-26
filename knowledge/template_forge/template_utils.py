@@ -1,6 +1,6 @@
 """模板渲染工具：meta 默认值补齐 + $ 模板渲染（单区块拼装用）。
 
-2026-08-21 从 code_skill/forge_tools.py 迁来（forge_tools 随 forge_engine 归档为旧套）：
+从 code_skill/forge_tools.py 迁来（forge_tools 随 forge_engine 归档为旧套）：
 derive_params / fill 是单区块拼装（block_assembler）的活依赖，其余
 （infer_template_id / apply_fixed_pins / forge_code）已随 forge_engine 归档。
 迁到 knowledge 层，消除 knowledge → src 的跨层 import。

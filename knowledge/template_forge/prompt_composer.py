@@ -128,13 +128,13 @@ class PromptComposer:
     # ---- 逻辑代码构建 ----
 
     def _build_logic(self, text: str, templates: list[str], relations: dict[str, Any]) -> dict[str, str]:
-        """生成**可消费**的逻辑代码段（2026-08-09 复查修正）。
+        """生成**可消费**的逻辑代码段（复查修正）。
 
         原则：只生成已实现的逻辑（controls 真接线由 FunctionalAssembler 完成），
         **不生成占位伪代码**——reports（跨模板状态上报）未实现时返回空，
         绝不生成"/* 在 xxx 循环中发送状态 */"这种假装实现的注释壳。
         """
-        # 2026-08-09 修正：controls 真接线已在 assemble_multi 渲染循环内完成
+        # 修正：controls 真接线已在 assemble_multi 渲染循环内完成
         # （${btn_action_code} 插槽注入被控动作），这里不再生成占位注释。
         # reports 跨模板状态上报尚未实现——不生成伪代码，留待真实现。
         return {}

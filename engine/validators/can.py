@@ -24,7 +24,7 @@ _check_can_deinit_no_clk_off = make_deinit_clk_off_validator(
 
 
 def _check_can_filter(ctx: dict[str, Any]) -> bool:
-    """检查是否配置了 CAN 过滤器（2026-08-13 上下文化：无 CAN 初始化则放行）。"""
+    """检查是否配置了 CAN 过滤器（上下文化：无 CAN 初始化则放行）。"""
     code = strip_comments(ctx.get("_code_artifact", ""))
     if not code:
         return True
@@ -35,7 +35,7 @@ def _check_can_filter(ctx: dict[str, Any]) -> bool:
 
 
 def _check_can_started(ctx: dict[str, Any]) -> bool:
-    """检查是否调用了 HAL_CAN_Start（2026-08-13 上下文化：无 CAN 初始化则放行）。"""
+    """检查是否调用了 HAL_CAN_Start（上下文化：无 CAN 初始化则放行）。"""
     code = strip_comments(ctx.get("_code_artifact", ""))
     if not code:
         return True

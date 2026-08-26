@@ -1,6 +1,6 @@
 """板卡画像解析器：board.json 从板卡层（skills/boards/）优先解析，芯片层回退。
 
-2026-08-17 板卡层独立（板子是板，芯片是芯片）：board.json 迁到 skills/boards/ 下，
+板卡层独立（板子是板，芯片是芯片）：board.json 迁到 skills/boards/ 下，
 按 board.json 的 meta.mcu 匹配芯片。旧路径 skills/chips/{chip}/board.json 保留作回退
 （未迁移芯片仍可用）。code_skill 与 context_loader 统一走本模块，避免两处重复。
 """
@@ -32,7 +32,7 @@ def resolve_board_json(root: Path, active_chip: str) -> Path | None:
             if str(data.get("meta", {}).get("mcu", "")).lower() == active_chip.lower():
                 return bj
 
-    # ② 芯片层回退（旧兼容，2026-08-19 拔插式：chips 目录从 config 取）
+    # ② 芯片层回退（旧兼容，拔插式：chips 目录从 config 取）
     try:
         from infrastructure.config import CHIPS_DIR
 

@@ -3,7 +3,7 @@
 来源：STM32Cube_FW_F4_V1.28.3 官方 Templates（STM32F4-Discovery，F407VGT6），
 已归档到 knowledge/template_forge/industrial_benchmark/f407_official/。
 
-这个契约回答念安的核心问题：**工业级代码的「钉子孔」长什么样**——
+这个契约回答的核心问题：**工业级代码的「钉子孔」长什么样**——
 HAL 引入 → 业务 .c → 时钟 → 重置 → 初始化 → 配置 → 按需时序。
 工艺监测器据此校验生成的代码：每个孔是否钉对了钉子。
 
@@ -72,7 +72,7 @@ F407_CLOCK_PARAMS: dict[str, str] = {
 
 # ────────────────────────── 配套文件清单（完整工程该有的文件） ──────────────────────────
 # key = 文件相对路径（相对工程根），value = 必须出现的锚点（子串）。
-# 文件名随芯片系列前缀动态生成（2026-08-22 活接口化：不再写死 stm32f4xx）。
+# 文件名随芯片系列前缀动态生成（活接口化：不再写死 stm32f4xx）。
 
 
 def project_file_anchors(chip: str | None = None) -> dict[str, list[str]]:
@@ -93,7 +93,7 @@ def project_file_anchors(chip: str | None = None) -> dict[str, list[str]]:
     }
 
 # ────────────────────────── 工业骨架固定顺序（工艺链的「孔序」） ──────────────────────────
-# 念安定调：HAL 引入 → 业务 .c → 时钟 → 重置 → 初始化 → 配置 → 按需时序。
+# ：HAL 引入 → 业务 .c → 时钟 → 重置 → 初始化 → 配置 → 按需时序。
 
 INDUSTRIAL_ORDER: list[str] = [
     "hal_include",        # 先标明 HAL 库引入

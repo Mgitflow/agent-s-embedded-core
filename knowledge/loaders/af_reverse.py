@@ -2,7 +2,7 @@
 from typing import Any
 
 # 非外设功能黑名单：这些是引脚的非 AF 复用功能，不收录到 af_map。
-# 2026-08-25 重建后分两类：
+# 重建后分两类：
 # ① f407/apm32 重建后：调试/时钟/晶振已移到 pin_map special 字段，functions 里残留的非 AF
 #   信号只有 EVENTOUT / RTC_AF1 / RTC_REFIN；
 # ② f103/g431 未重建（旧格式）：调试/时钟信号仍在 functions，需沿用旧黑名单排除。

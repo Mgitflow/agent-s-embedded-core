@@ -21,7 +21,7 @@ class PinAllocator:
         self._occupied: dict[str, str] = {}  # pin -> owner（模板/信号）
         self._allocations: dict[str, str] = {}  # signal -> pin
         self._gpio_allocations: dict[str, str] = {}  # owner -> pin（GPIO 池）
-        self._conflicts: list[str] = []  # 避让日志（念安：要标明）
+        self._conflicts: list[str] = []  # 避让日志（要标明）
         self._remapped: set[str] = set()  # 已注入 AFIO remap 的外设前缀（f103，去重）
         self._afio_clk_enabled: bool = False  # AFIO 时钟是否已注入（全局一次）
 
@@ -148,7 +148,7 @@ class PinAllocator:
         sig_key = signal.lower().replace("_", "")
         var = f"{var_prefix}_{sig_key}_gpio_init"
         lines = [f"  __HAL_RCC_GPIO{port}_CLK_ENABLE();", f"  GPIO_InitTypeDef {var} = {{0}};"]
-        # f103 AFIO 重映射（2026-08-25 遗漏①落地）：选重映射引脚时，须先配置 AFIO_MAPR
+        # f103 AFIO 重映射（遗漏①落地）：选重映射引脚时，须先配置 AFIO_MAPR
         # 重映射位（__HAL_AFIO_REMAP_XXX），否则引脚不通。AFIO 时钟 + 宏每个外设只注入一次
         # （重复 SET_BIT 幂等但冗余，去重更干净）。放 GPIO init 之前（先 remap 再配 GPIO）。
         remap_macros = self._adapter.get_remap_macros(signal, pin)
@@ -192,7 +192,7 @@ class PinAllocator:
             pin_reqs:    模板引脚需求（参数键 → 信号模板或 "@GPIO"）
                          例: {"tx_pin": "USART{uart_instance}_TX", "led_pin": "@GPIO"}
             owner:       实例标识（多实例场景：led_blink#1 / led_blink#2），
-                         缺省 = template_id。念安 8-20「名字@引脚」连体：owner 即「名字」，
+                         缺省 = template_id。「名字@引脚」连体：owner 即「名字」，
                          两个都叫 LED 的用不同 owner 区分，各自独立占角（不互相复用引脚）。
 
         Returns:
@@ -249,7 +249,7 @@ class PinAllocator:
     def _derive_pin_parts(filled: dict[str, Any], prefix: str) -> None:
         """从 {prefix}_pin（PA9）派生 {prefix}_port（A）和 {prefix}_pin_no（9）。
 
-        2026-08-09 修正：**强制重派生**——引脚参数是权威，分配器避让后
+        修正：**强制重派生**——引脚参数是权威，分配器避让后
         引脚变了，port/pin_no 必须跟着更新（否则模板复用段还是旧引脚）。
         """
         pin = filled.get(f"{prefix}_pin")

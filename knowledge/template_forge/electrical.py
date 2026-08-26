@@ -1,6 +1,6 @@
 """电气手册解读 + 参数计算（填数调度）。
 
-念安 2026-08-19 设计：模板占位符 ${xxx} 是「给你看的占位」——没有芯片手册
+ 设计：模板占位符 ${xxx} 是「给你看的占位」——没有芯片手册
 就填不了真实数据，填不了就不能真用。本模块干两件事：
 
 1. ElectricalProfile —— 加载芯片肖像里的 electrical.json（手册解读出的「定型」
@@ -9,7 +9,7 @@
 2. calculate_* —— 智能调度填数：输入目标参数（如 50Hz PWM），用时钟树 + 上下限
    计算真实配置值（Prescaler/Period/BRR），并校验不越界（防「过度结构」）。
 
-数据来源：knowledge/manuals/<chip>/electrical.json（2026-08-19 手册归知识库分区，
+数据来源：knowledge/manuals/<chip>/electrical.json（手册归知识库分区，
 每个芯片/开发板一套专属手册；时钟树权威源是 profile.json，此处只留填数必需字段）。
 """
 from __future__ import annotations
@@ -35,7 +35,7 @@ class ElectricalProfile:
     """芯片电气手册定型数据（时钟树 + 引脚电气 + 参数上下限）。"""
 
     def __init__(self, chip: str = "stm32f407zgt6", manual_dir: Path | None = None) -> None:
-        # 手册资料统一放知识库分区 knowledge/manuals/<chip>/（2026-08-19 念安定：
+        # 手册资料统一放知识库分区 knowledge/manuals/<chip>/（定：
         # 手册不塞芯片肖像目录，芯片肖像只留结构数据）。manual_dir 可显式传入（测试用）。
         if manual_dir is None:
             from infrastructure.config import manual_dir as _manual_dir
@@ -80,7 +80,7 @@ class ElectricalProfile:
     def validate_memory_layout(self) -> dict[str, Any]:
         """校验内存分区一致性（防「129=128+64」的坑）。
 
-        念安 8-19「每次检查芯片前完整解读手册，防『129 其实是 128+64』两种模式要分开、
+        「每次检查芯片前完整解读手册，防『129 其实是 128+64』两种模式要分开、
         内部也分开配置」：手册里的总 SRAM 数，实际是多个分区（SRAM1+SRAM2+CCM）的总和，
         且 CCM 仅 CPU 可访问（DMA 不能）。生成 .ld / 分配堆栈时若把不连续分区当连续块用
         （或把 CCM 当普通 SRAM 给 DMA），会 HardFault。
@@ -261,7 +261,7 @@ def load_profile(chip: str = "stm32f407zgt6") -> ElectricalProfile:
 
 
 # ═══════════════════════════════════════════════════════════════════
-# 电气参数命名权威源（念安 8-20「语义成型」）
+# 电气参数命名权威源（「语义成型」）
 # 同一个电气概念，三层各叫一个名 —— 此处单一写清对应关系，一眼看透：
 #   识别层(用户语义) → functional 模板占位符 → 单区块模板占位符(HAL 字段语义)
 # fill_electrical_params 按此表把「识别层语义名」填成「functional 占位符名」；
@@ -282,7 +282,7 @@ REQ_TO_PARAM: dict[str, dict[str, str]] = {
 def fill_electrical_params(chip: str, params: dict[str, Any]) -> dict[str, Any]:
     """电气填数调度：识别层语义参数 → 模板占位符参数（有需求→calculate，无需求→不覆盖）。
 
-    念安 8-20「让电气资料去填配置参数」：模板正常用的时候，填充带参数，由电气资料
+    「让电气资料去填配置参数」：模板正常用的时候，填充带参数，由电气资料
     算出真实配置值（日常填时钟数，有需求填频率/波特率）。优先级：用户显式给的底层
     参数 > 电气自动算 > 模板默认。
 
@@ -320,7 +320,7 @@ def fill_electrical_params(chip: str, params: dict[str, Any]) -> dict[str, Any]:
 def parse_electrical_reqs(text: str) -> dict[str, Any]:
     """识别层：从需求文本提取电气高层参数（频率/波特率/时钟）。
 
-    念安 8-20「识别层之后它自动算」：识别层把需求里的「50Hz」「9600 波特率」等
+    「识别层之后它自动算」：识别层把需求里的「50Hz」「9600 波特率」等
     抠成高层参数，交给 fill_electrical_params 自动算底层配置值。
 
     识别规则（数字 + 单位/关键词）：

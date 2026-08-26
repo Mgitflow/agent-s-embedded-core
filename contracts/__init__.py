@@ -23,7 +23,7 @@ __all__ = [
     "ReflectorInput", "ReflectorOutput", "ReviewLoopResult",
     "KnowledgeEntry", "CompatibilityResult", "IKnowledgeSource",
     "PipelineError", "RecoverableError", "FatalError",
-    # 抽象接口（有实现类的存活接口；死接口已于 2026-08-22 摘除）
+    # 抽象接口（有实现类的存活接口；死接口已于 摘除）
     "IAssessor",
     "ICodeSkill",
     "IReflector",

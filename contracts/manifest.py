@@ -39,7 +39,7 @@ class Capability:
 
 @dataclass
 class MemoryAssetRef:
-    """组织记忆资产声明（2026-08-12 ORG_MEMORY_DESIGN 落地）。
+    """组织记忆资产声明（ORG_MEMORY_DESIGN 落地）。
 
     对齐 TencentDB Agent Memory 四类资产：chat / skill / wiki / codegraph。
     各项目在 manifest 声明自有记忆资产，SE 治理层据此做注册/权限/审计。

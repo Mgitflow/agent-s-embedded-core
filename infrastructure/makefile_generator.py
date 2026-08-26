@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 def _hal_sources_for_peripherals(peripherals: list[str] | None, family_name: str) -> list[str]:
     """根据使用的外设列表生成需要编译的 HAL 源文件列表。
 
-    2026-08-22 识别公共区块：外设→源文件从系列 manifest 的 hal_peripherals 读（材料驱动），
+    识别公共区块：外设→源文件从系列 manifest 的 hal_peripherals 读（材料驱动），
     不再写死 F4 基准表 + replace 前缀——G4 的 FDCAN/COMP/OPAMP、F1 无 ETH 等系列差异正确体现。
     """
     from infrastructure.chip_family import FAMILIES
@@ -103,7 +103,7 @@ def _build_makefile_content(
         "all: $(TARGET).elf $(TARGET).hex $(TARGET).bin",
         "",
         "# 链接脚本是 elf 的依赖：改 .ld（如 RAM/CCM 大小）必须触发重链",
-        "# 2026-08-17 教训：改了 RAM 192K→128K 但 Makefile 不重链 → 烧录还是旧栈顶 → HardFault",
+        "# 教训：改了 RAM 192K→128K 但 Makefile 不重链 → 烧录还是旧栈顶 → HardFault",
         "$(TARGET).elf: $(C_SOURCES) $(LDSCRIPT)",
         "\t$(CC) $(CFLAGS) $(filter-out $(LDSCRIPT),$^) $(LDFLAGS) -o $@",
         "\t$(SZ) $@",
@@ -184,7 +184,7 @@ def _find_arm_gcc() -> str | None:
 
 
 # 单次编译超时（秒）
-COMPILE_TIMEOUT = 120  # 2026-08-06：60→120——负载高峰（IDE 索引/杀毒）时 make 编译可能超 60s 导致偶发失败
+COMPILE_TIMEOUT = 120  # ：60→120——负载高峰（IDE 索引/杀毒）时 make 编译可能超 60s 导致偶发失败
 
 
 def _find_make() -> str | None:
@@ -226,7 +226,7 @@ def compile_check(project_dir: str) -> str | None:
     if not make:
         return "make not found (OK if not installed)"
 
-    # 2026-08-14 芯片数据扩充：缺 HAL 驱动库（F1/G4 系列未下载 reference 库）→ skipped
+    # 芯片数据扩充：缺 HAL 驱动库（F1/G4 系列未下载 reference 库）→ skipped
     # 而非硬编失败——生成完整，编译需按系列下载对应 STM32Cube 库。
     hal_inc = Path(project_dir) / "Drivers" / "HAL" / "Inc"
     if not hal_inc.exists() or not any(hal_inc.glob("*_hal.h")):

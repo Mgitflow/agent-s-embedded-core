@@ -35,13 +35,13 @@ if TYPE_CHECKING:
 
 logger = setup_logging()
 
-# 2026-08-06 安全收口：默认仅绑定本机回环；需要局域网访问时显式 --host 0.0.0.0 + 配 token
-# 2026-08-07 端口统一：组织排序 S 第一 → S 主服务 8000（PORT_MAP 权威基准）
+# 安全收口：默认仅绑定本机回环；需要局域网访问时显式 --host 0.0.0.0 + 配 token
+# 端口统一：组织排序 S 第一 → S 主服务 8000（PORT_MAP 权威基准）
 
 # 项目版本统一入口（与 pyproject / config/studio.yaml 对齐）
 APP_VERSION = "1.0.0"
 
-# ── 可观测性：轻量请求指标（2026-08-06 落地，无外部依赖）──
+# ── 可观测性：轻量请求指标（落地，无外部依赖）──
 _REQUEST_STATS: dict[str, Any] = {
     "started_at": time.time(),
     "total": 0,
@@ -128,7 +128,7 @@ class _StudioHandler(BaseHTTPRequestHandler):
     def _maybe_cors_headers(self) -> None:
         """CORS 白名单 Origin 回显（防 localhost CSRF）。
 
-        2026-08-20 重设计：不再发 `Access-Control-Allow-Origin: *`（token 为空时，
+        重设计：不再发 `Access-Control-Allow-Origin: *`（token 为空时，
         任意恶意网页可借浏览器跨域触发生成/编译/改 MCU）。改为：请求 Origin 命中
         白名单（cors_allowed_origins）才回显该 Origin；白名单含 `*` 才回显 `*`。
         """
@@ -160,7 +160,7 @@ class _StudioHandler(BaseHTTPRequestHandler):
         """
         发送静态文件。
 
-        2026-08-06 安全修复：传入 allowed_root 时强制校验 file_path 解析后必须位于
+        安全修复：传入 allowed_root 时强制校验 file_path 解析后必须位于
         allowed_root 之内，杜绝路径穿越（此前 /audio/ 可直接读取任意文件）。
         """
         try:
@@ -232,7 +232,7 @@ class _StudioHandler(BaseHTTPRequestHandler):
 
     def _handle_get(self, path: str) -> None:
         """GET 请求分发（原 do_GET 逻辑）。"""
-        # 2026-08-06 安全收口：受保护端点统一鉴权（放在分发前，防 elif 链漏网）
+        # 安全收口：受保护端点统一鉴权（放在分发前，防 elif 链漏网）
         if path in _PROTECTED_GET and not self._check_auth():
             self._send_json({"ok": False, "error": "unauthorized"}, status=401)
             return
@@ -295,7 +295,7 @@ class _StudioHandler(BaseHTTPRequestHandler):
             else:
                 self._send_json(_build_manifest(ws).to_dict())
         elif path == "/metrics":
-            # 可观测性：请求统计指标（2026-08-06 轻量落地）
+            # 可观测性：请求统计指标（轻量落地）
             self._send_json(_collect_metrics())
         elif path == "/capabilities":
             ws = self._workspace
@@ -304,7 +304,7 @@ class _StudioHandler(BaseHTTPRequestHandler):
             else:
                 self._send_json({"capabilities": [s["name"] for s in ws.registry.list_skills()]})
         elif path.startswith("/audio/"):
-            # 2026-08-06：TTS 生成的音频文件（data/tts/cache/）
+            # ：TTS 生成的音频文件（data/tts/cache/）
             # 安全修复：fname 只取文件名（防 ../ 穿越），并限定在 _TTS_DIR 内
             from infrastructure.tts import _TTS_DIR
 
@@ -335,7 +335,7 @@ class _StudioHandler(BaseHTTPRequestHandler):
         """POST 请求分发（原 do_POST 逻辑）。"""
         workspace = self._workspace
 
-        # 2026-08-06 安全收口：受保护 POST 端点统一鉴权（/skill 真编译、/voice/speak TTS）
+        # 安全收口：受保护 POST 端点统一鉴权（/skill 真编译、/voice/speak TTS）
         if (
             path.startswith(_PROTECTED_POST_PREFIX)
             or path in _PROTECTED_POST
@@ -379,7 +379,7 @@ class _StudioHandler(BaseHTTPRequestHandler):
                 result = ui_routes[path](data)
                 self._send_json(result)
             except Exception as e:
-                # 2026-08-06 安全收口：内部异常细节只进日志，不回传客户端
+                # 安全收口：内部异常细节只进日志，不回传客户端
                 logger.exception(f"UI route {path} failed: {type(e).__name__}: {e}")
                 self._send_json({"ok": False, "error": "internal error"}, status=500)
             return
@@ -431,7 +431,7 @@ class _StudioHandler(BaseHTTPRequestHandler):
                 generator = _chat_adapter.chat_stream(workspace, data)
         else:
             generator = ui_adapter.code_generate_stream(workspace, data)
-        # 2026-08-06 修复：客户端断开时 wfile.write 抛 BrokenPipeError，
+        # 修复：客户端断开时 wfile.write 抛 BrokenPipeError，
         # 此前未捕获直接让线程异常退出。捕获后静默结束该 SSE 会话。
         try:
             asyncio.run(self._drain_stream(generator))
@@ -473,12 +473,12 @@ class _StudioServer(ThreadingHTTPServer):
         self.api_token = api_token
         self.cors_enabled = cors_enabled
         self.cors_allowed_origins = cors_allowed_origins or []
-        # 2026-08-06：SSE 长连接线程设为 daemon，避免阻塞进程退出
+        # ：SSE 长连接线程设为 daemon，避免阻塞进程退出
         self.daemon_threads = True
 
 
 def _nerve_root_register(port: int) -> None:
-    """神经根注册（P1 细节层 2026-08-08）：S 向文件地面登记。
+    """神经根注册（P1 细节层）：S 向文件地面登记。
 
     失败安全：C 守护未启动 / shared 不可达 → 静默降级，不阻断 S 启动。
     """
@@ -514,7 +514,7 @@ def run_server(
         os.environ["AGENT_S_CHIP_NAME"] = chip_active
 
     # ── 启动审核官：环境变量/标准文件/知识目录/LLM/芯片包 五层校验 ──
-    # 2026-08-06 接线：validate_startup 此前写了没人调，现作为启动前置审核。
+    # 接线：validate_startup 此前写了没人调，现作为启动前置审核。
     # 审核不阻断启动（保留模板兜底），但逐条报告风险项。
     try:
         from infrastructure.config import KNOWLEDGE_BASE, LM_STUDIO_URL, STANDARD_PATHS
@@ -547,7 +547,7 @@ def run_server(
     ui_dir = _get_shared_ui_dir()
     ui_hint = f", UI dir: {ui_dir}" if ui_dir.exists() else ", UI not found"
 
-    # ── 神经根注册（P1 细节层，2026-08-08）：文件队列持久层客户端，失败安全 ──
+    # ── 神经根注册（P1 细节层，）：文件队列持久层客户端，失败安全 ──
     _nerve_root_register(bind_port)
 
     server = _StudioServer(

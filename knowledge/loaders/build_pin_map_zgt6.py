@@ -154,7 +154,7 @@ def build_and_write(out_path: Path | None = None) -> dict[str, Any]:
                 "schema_version": "1.1.0",
                 "chip": "STM32F407ZGT6",
                 "package": "LQFP144",
-                "comment": "官方 DS8626 Table 5 重建（2026-08-09 复查修正：删 PI 端口/PH2，补 PDR_ON 与 PF/PG 完整 AF）",
+                "comment": "官方 DS8626 Table 5 重建（复查修正：删 PI 端口/PH2，补 PDR_ON 与 PF/PG 完整 AF）",
                 "pins": pin_map,
             },
             ensure_ascii=False,
@@ -208,7 +208,7 @@ if __name__ == "__main__":
     af_out.write_text(
         json.dumps(
             {
-                "comment": "完整 AF 映射（pin_map 自动反推，2026-08-09 ZGT6 重建）",
+                "comment": "完整 AF 映射（pin_map 自动反推，ZGT6 重建）",
                 "af_numbers": _load_af_numbers(),
                 "default_pins": _load_default_pins(),
                 "full_af_map": af,

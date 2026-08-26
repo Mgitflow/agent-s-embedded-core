@@ -30,7 +30,7 @@ class ChipFamily:
     adc_resolution_macro: str = "ADC_RESOLUTION_12B"  # ADC 分辨率宏名：F1=ADC_RESOLUTION12b，F4/G4=ADC_RESOLUTION_12B
 
 
-# 2026-08-19 拔插式：_series 目录从 config.CHIPS_DIR 派生（AGENT_S_CHIPS_DIR 可替换）
+# 拔插式：_series 目录从 config.CHIPS_DIR 派生（AGENT_S_CHIPS_DIR 可替换）
 _SERIES_DIR = Path(CHIPS_DIR) / "_series"
 
 
@@ -116,7 +116,7 @@ def derive_linker_name(chip_name: str) -> str:
 def family_from_chip_name(chip_name: str) -> str:
     """从芯片型号字符串推断 family 键。
 
-    2026-08-14 智能巡查点：判定逻辑统一收拢到 chip_gateway
+    智能巡查点：判定逻辑统一收拢到 chip_gateway
     （适配器扫 _series/*/family.json 的 defines 自动注册，新增系列只放材料）。
     """
     return _chip_gateway.family_key_for_chip(chip_name)

@@ -47,7 +47,7 @@ _tim_clock_first = make_clock_first_validator(
 
 
 def _tim_period_nonzero(ctx: Any) -> bool:
-    """检查 Period (ARR) 是否设置且不为零（2026-08-13 上下文化：无 TIM 初始化则放行）。"""
+    """检查 Period (ARR) 是否设置且不为零（上下文化：无 TIM 初始化则放行）。"""
     code = strip_comments(ctx.get("_code_artifact", ""))
     if not re.search(r"\bHAL_TIM_\w+_Init\s*\(|\bhtim\d", code):
         return True  # 无 TIM 外设（无 Init 调用且无句柄）不要求 Period

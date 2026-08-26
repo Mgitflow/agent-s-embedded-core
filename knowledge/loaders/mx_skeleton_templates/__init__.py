@@ -1,6 +1,6 @@
 """骨架模板包：按芯片族拆分（base/f1/f4/f7/g4），自动发现注册，供骨架引擎按族动态选择。
 
-去枚举（2026-08-22）：扫描本包下带 ``ORG_META`` 元数据的模板模块自动注册——
+去枚举：扫描本包下带 ``ORG_META`` 元数据的模板模块自动注册——
 加一个系列 = 放一个模板模块（含 ORG_META），不改本文件。
 """
 import importlib
@@ -13,7 +13,7 @@ from knowledge.loaders.mx_skeleton_templates.base import LINKER_LD_TEMPLATE, PRO
 class OrgTemplates:
     """单个芯片族的完整模板集合。
 
-    ECC Skills 元数据（2026-08-08）：version（模板版本）/ supported_peripherals
+    ECC Skills 元数据：version（模板版本）/ supported_peripherals
     （适用外设清单）/ hooks（建议挂载点）——供 manifest 自检与外部消费。
     """
 

@@ -85,7 +85,7 @@ class StudioWorkspace:
         result.elapsed_ms = (time.perf_counter() - t0) * 1000
 
         self._record(skill, result)
-        # 2026-08-06：衔接广播仅在 transport 注入时触发（当前 SE 未接，零空转开销）
+        # ：衔接广播仅在 transport 注入时触发（当前 SE 未接，零空转开销）
         if self.ctx.transport is not None:
             await self._announce(skill, result)
         return result

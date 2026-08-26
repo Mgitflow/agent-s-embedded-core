@@ -16,7 +16,7 @@ def strip_comments(code: str) -> str:
 def find_function_bodies(code: str) -> list[tuple[str, str]]:
     """提取顶层函数 (name, body)，用于判断喂狗是否位于中断回调内。
 
-    2026-08-13 从 iwdg.py/wwdg.py 抽公共（两处原实现完全重复）。
+    从 iwdg.py/wwdg.py 抽公共（两处原实现完全重复）。
     """
     bodies: list[tuple[str, str]] = []
     for match in re.finditer(r"(\w+)\s*\([^)]*\)\s*\{", code):

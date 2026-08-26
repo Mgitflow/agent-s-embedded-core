@@ -67,7 +67,7 @@ def _get_server_config() -> tuple[str, int, str]:
     return str(host), int(port), token
 
 def _get_shared_ui_dir() -> Path:
-    """公共 UI 目录：环境变量 > config 统一默认（2026-08-19 集中化，不再写死 E:/Code）。"""
+    """公共 UI 目录：环境变量 > config 统一默认（集中化，不再写死 E:/Code）。"""
     env_dir = os.environ.get("AGENT_SHARED_UI_DIR")
     if env_dir:
         return Path(env_dir)
@@ -84,7 +84,7 @@ def _build_manifest(workspace: Any) -> AgentManifest:
 
     能力清单从工作室注册表动态生成——studio.yaml 三态声明的技能
     全部进入 manifest，保证"声明 == 实现"，自检不会踩空。
-    endpoint 以实际配置端口为准（2026-08-06 修复：此前写死 8000 与真实 8001 不符）。
+    endpoint 以实际配置端口为准（修复：此前写死 8000 与真实 8001 不符）。
     """
     from contracts.manifest import AgentManifest, AgentRole, Capability, SkillSchema
 

@@ -407,7 +407,7 @@ def get_reference(series: str) -> str:
 def render_reference(series: str, chip: str) -> str:
     """把系列范本渲染成具体芯片范本（整体·细化）。
 
-    念安 8-21「整体·细化」：范本分大面（系列级占位符 <PLLM>/<PLLN> 等）和
+    「整体·细化」：范本分大面（系列级占位符 <PLLM>/<PLLN> 等）和
     细化（具体芯片值）。本函数把时钟占位符用具体芯片 clock_tree 填，生成「具体
     芯片范本」（展示样本，供对照校验 + LLM 参考）。引脚/外设占位符保留——它们是
     结构示意，拼装时由 PinAllocator/单区块具体化。

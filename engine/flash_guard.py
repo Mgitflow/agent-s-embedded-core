@@ -110,7 +110,7 @@ class FlashGuard:
         if main_c.exists():
             main_text = main_c.read_text(encoding="utf-8", errors="ignore")
         else:
-            # 2026-08-18 能力预判修复：main.c 缺失 → 引脚/时钟/主循环三个核心筛查
+            # 能力预判修复：main.c 缺失 → 引脚/时钟/主循环三个核心筛查
             # 无法执行，必须 fail-closed 拦截（「未过筛查绝不打包」是底线承诺，
             # 不能因为筛查被静默跳过而放行）。
             report.add("MUST", "F13_MAIN_MISSING", "main.c 缺失，核心筛查（引脚/时钟/主循环）无法执行", str(main_c))

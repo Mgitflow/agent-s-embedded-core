@@ -25,7 +25,7 @@ _REFERENCE_ENV_VARS = {
 class FamilyAdapter:
     """一个芯片系列的对接器：持有该系列的全部路径/命名/覆盖信息。
 
-    去枚举（2026-08-22）：由 ``_build_adapters()`` 扫 ``_series/*/family.json`` 自动注册，
+    去枚举：由 ``_build_adapters()`` 扫 ``_series/*/family.json`` 自动注册，
     加系列 = 放一个 family.json，不改代码。
     """
 
@@ -459,7 +459,7 @@ class ChipGateway:
     def list_supported_chips(self) -> list[str]:
         """扫描 chips 目录下全部已注册芯片 profile。
 
-        2026-08-19 拔插式：chips 目录从 config.CHIPS_DIR 取（AGENT_S_CHIPS_DIR 可替换）。
+        拔插式：chips 目录从 config.CHIPS_DIR 取（AGENT_S_CHIPS_DIR 可替换）。
         """
         from infrastructure.config import CHIPS_DIR
 

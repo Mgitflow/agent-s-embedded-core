@@ -64,7 +64,7 @@ class RuleEngine(IRuleEngine):
         return []
 
     def _validate_with_standard(self, scene: str, context: dict[str, Any], standard: Any) -> list[RuleResult]:
-        # 2026-08-14 防御：standard 可能是 list（某些标准文件顶层是列表而非 dict）
+        # 防御：standard 可能是 list（某些标准文件顶层是列表而非 dict）
         # 此前直接 .get 抛 unhashable TypeError，多外设用例（combo）炸 GoldenBench
         if not isinstance(standard, dict):
             return []

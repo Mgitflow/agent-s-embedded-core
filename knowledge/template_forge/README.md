@@ -1,9 +1,9 @@
 # 模板生产底座（Template Forge Base）— 影子工程 V2 S3 的知识支撑
 
-> 2026-08-09 念安拍板重构。位置：`knowledge/template_forge/`
-> 定位：**识别套式（assemble_routed）的模板知识底座**（2026-08-21 forge_engine 旧套已归档）。
+> 重构。位置：`knowledge/template_forge/`
+> 定位：**识别套式（assemble_routed）的模板知识底座**（forge_engine 旧套已归档）。
 
-## 〇、四源资源全利用（念安：资源都是弄好的，要会用）
+## 〇、四源资源全利用（资源都是弄好的，要会用）
 
 | 资源 | 位置 | 用途 | 适配器 |
 |---|---|---|---|
@@ -12,7 +12,7 @@
 | **共享知识库** | `AGENT_SHARED_KB/archived/`（默认 `<项目父目录>/shared_knowledge/`） | ST 官方 HAL 写法聚合（生成代码带官方参考注释） | `resource_adapter.py` |
 | **符号索引** | `knowledge/symbol_index.py` | Serena 2889 符号（真实 HAL 库） | `resource_adapter.py` |
 
-## 一、模板的两层形态（念安"汉堡"比喻）
+## 一、模板的两层形态（""比喻）
 
 ```
 完整工程代码 = 上层面包（固定框架）
@@ -79,7 +79,7 @@ hal_msp.c:     时钟使能 __HAL_RCC_*_CLK_ENABLE + 引脚复用（严格 CubeM
 loop:          while(1) 主循环（点灯/呼吸/打印/采样逻辑）
 ```
 
-### 完整工程包（真正可用的工艺级代码，2026-08-09 念安拍板，2026-08-18 标准工程化）
+### 完整工程包（真正可用的工艺级代码，，标准工程化）
 
 `assemble_routed`（识别套式）→ `build_standard_project`：功能模板按外设分组，产出**标准 CubeMX 工程**
 （不止 main.c，含外设独立文件 + hal_msp.c）：
@@ -115,7 +115,7 @@ FunctionalAssembler().identify_routines("点灯+按键")   # 识别需求（boar
 "串口打印" → PA9/PA10/AF7 自动注入；用户指定优先，肖像兜底。
 **资源增强**：渲染后 API 名校验（全 HAL 库白名单，拼错函数名即拦）+ 四源知识注释注入。
 
-## 四·五、引脚占位机制（PinAllocator，OccupancyGrid 落点，2026-08-09 念安拍板）
+## 四·五、引脚占位机制（PinAllocator，OccupancyGrid 落点，）
 
 脚本自动识别引脚可能"瞎识别"、可能撞车——**占位机制**保证：
 只要前一个功能占了某个引脚，后面自动识别时这个引脚就不能再占。
@@ -144,7 +144,7 @@ al.allocate("TIM1_CH1", "pwm_output", "PA5")    # 已被占 → 自动避让到 
 铁律：**先分配先占，后分配自动避让**；避让过程必须标明（[PINS] 日志），
 用户/LLM 能看见"PA9 被占 → 换 PB6"，杜绝静默撞车。
 
-## 四·六、参考范本 + 模板核验（2026-08-09 念安：通用模板单拎出来做完美范本）
+## 四·六、参考范本 + 模板核验（通用模板单拎出来做完美范本）
 
 **参考范本**（`reference_templates.py`，ref_f407/ref_f103）——系列级"完美模板"：
 不写具体数值，就是"嵌入式公共代码就该这么写"的标准（文件头 / HAL_Init →
@@ -153,7 +153,7 @@ SystemClock_Config → 外设初始化区 → while(1) → Error_Handler；外�
 **一举两用**：既是模板库一员，又是脚本核验和 LLM 指挥的**参考标准**
 （上下级调研层——直接跟 LLM 说配置它可能懵，给它看范本就懂了）。
 
-**模板核验**（2026-08-21 `template_auditor.py` 已归档，核验职责由 `config_validator.py`
+**模板核验**（`template_auditor.py` 已归档，核验职责由 `config_validator.py`
 生成前校验 + `scripts/forge_health_check.py` 健康巡查顶替）：细化模板照着范本打、
 按范本核验——v2 字段齐全 / 元数据 / init 五段式 / 引脚复用 / 变量前缀 / IWDG 豁免时钟。
 
@@ -163,7 +163,7 @@ from knowledge.template_forge.reference_templates import ReferenceTemplateStore
 ReferenceTemplateStore().skeleton("F407")   # 取范本（LLM/脚本参考）
 ```
 
-## 四·七、生成前配置校验 + S2 双冗余（对照 CubeMX 审查机制，2026-08-09 念安拍板）
+## 四·七、生成前配置校验 + S2 双冗余（对照 CubeMX 审查机制，）
 
 **生成前校验**（`config_validator.py`，偷学 CubeMX 审查机制）：
 必填（无默认值的 required 必须给）/ 范围（数值 [min,max]，规则表 + 类型推断
@@ -185,7 +185,7 @@ RETRY/REPAIR 标注放行（影子精神：审计记录，主流程照常）。
 渲染零残留/API 真实/范本核验/引脚数据/占位避让/变量唯一/知识库同步），
 全绿才叫完整可托付。
 
-## 五、现状（2026-08-09 复查定格）
+## 五、现状（复查定格）
 
 - ✅ 四源资源全利用（HL 库骨架/芯片肖像/共享库/符号索引）
 - ✅ **功能模板 26 个**（全外设覆盖：GPIO/TIM/UART/SPI/I2C/ADC/DAC/DMA/RTC/CAN/SDIO/IWDG/WWDG/CRC/RNG）
@@ -206,6 +206,6 @@ RETRY/REPAIR 标注放行（影子精神：审计记录，主流程照常）。
 1. **原线路零改动**：主轨 LLM 生成不动，影子副轨只做加法
 2. **失败安全**：锻造/匹配失败 → 回退，绝不阻断主轨
 3. **只增不减**：模板库只加不改（审计铁律），旧模板保留
-4. **量无上限**：模板越多套用越准（念安默许）；功能模板持续扩量
+4. **量无上限**：模板越多套用越准；功能模板持续扩量
 
-*模板底座定义 v4（四源资源适配 + 组合），2026-08-09。*
+*模板底座定义 v4（四源资源适配 + 组合），。*

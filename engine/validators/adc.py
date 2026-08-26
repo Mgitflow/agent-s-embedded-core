@@ -33,7 +33,7 @@ _check_adc_clk_late = make_clock_first_validator(
 
 
 def _check_adc_gpio_analog(ctx: dict[str, Any]) -> bool:
-    """检查 GPIO 是否配置为模拟模式（2026-08-13 上下文化：无 ADC 初始化则放行）。"""
+    """检查 GPIO 是否配置为模拟模式（上下文化：无 ADC 初始化则放行）。"""
     code = strip_comments(ctx.get("_code_artifact", ""))
     if not code:
         return True

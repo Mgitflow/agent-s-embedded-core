@@ -12,7 +12,7 @@ CHIP_KEYWORDS: dict[str, str] = {}
 PERIPHERAL_STRUCTURE: dict[str, list[str]] = {}
 PERIPHERAL_STANDARDS: dict[str, str] = {}
 
-# 2026-08-06 并发安全：模块级可变全局 dict 的写入统一加锁（多线程并发组装时的竞态防护）
+# 并发安全：模块级可变全局 dict 的写入统一加锁（多线程并发组装时的竞态防护）
 _load_lock = threading.RLock()
 
 

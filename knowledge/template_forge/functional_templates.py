@@ -10,7 +10,7 @@ from typing import Any
 
 _log = logging.getLogger(__name__)
 
-# 功能模板库目录（2026-08-19 拔插式：从 config.TEMPLATES_DIR 取，AGENT_S_TEMPLATES_DIR 可替换）
+# 功能模板库目录（拔插式：从 config.TEMPLATES_DIR 取，AGENT_S_TEMPLATES_DIR 可替换）
 try:
     from infrastructure.config import TEMPLATES_DIR
 
@@ -20,7 +20,7 @@ except Exception:  # noqa: BLE001 —— 兜底：config 不可用时退回项�
 
 
 # ────────────────────────── 数量词识别（多实例）──────────────────────────
-# 念安 8-20「两个灯」多实例：数量词（两个/2个）修饰的功能重复 N 次，
+# 「」多实例：数量词（两个/2个）修饰的功能重复 N 次，
 # 配合 PinAllocator 的「实例标识@引脚」连体冲突检测，区分「两个都叫 LED 的」。
 _CN_NUM = {"两": 2, "二": 2, "三": 3, "四": 4, "五": 5, "六": 6, "七": 7, "八": 8, "九": 9, "十": 10}
 _QUANT_RE = re.compile(r"([两二三四五六七八九十\d]+)\s*(?:个|盏|颗|路|组|只)")
@@ -49,7 +49,7 @@ def _expand_quantifiers(text: str, tids: list[str]) -> list[str]:
 
 
 # ────────────────────────── 引脚需求声明 ──────────────────────────
-# 2026-08-09 念安拍板：脚本自动识别引脚可能瞎配/撞车 → 占位机制。
+# ：脚本自动识别引脚可能瞎配/撞车 → 占位机制。
 # 每个有引脚的模板声明它需要的芯片信号（PinAllocator 按此分配+避让）：
 #   "参数键": "信号模板"（{instance}/{channel} 等占位由用户参数填充）
 #   "参数键": "@GPIO"  （纯 GPIO 功能：点灯/按键/EXTI，走 GPIO 池分配）
@@ -108,7 +108,7 @@ class FunctionalTemplateStore:
     """功能模板库：关键字匹配 + 模板读取 + 版本归档。
 
     模板来源：基础 6 个（FUNCTIONAL_TEMPLATES）+ **JSON 单一权威源**
-    （forge_templates/functional/*.json，2026-08-09 起统一；旧 ext 三梯队
+    （forge_templates/functional/*.json，起统一；旧 ext 三梯队
     文件已归档至 org-archive/agent-s-template-forge-20260814/，不再引用）。
     """
 
@@ -120,10 +120,10 @@ class FunctionalTemplateStore:
         self._index_keywords()
 
     def _merge_builtin(self) -> None:
-        """加载模板数据（2026-08-09 架构升级：**JSON 单一权威源**）。
+        """加载模板数据（架构升级：**JSON 单一权威源**）。
 
         模板数据统一存 forge_templates/functional/*.json（含 globals 段），
-        不再维护在 py dict（批量修改源码易坏，教训 2026-08-09）。
+        不再维护在 py dict（批量修改源码易坏，教训）。
         内置 py dict 仅作无 JSON 时的 fallback。
         """
         if FUNCTIONAL_TEMPLATES:
@@ -249,14 +249,14 @@ class FunctionalTemplateStore:
             occupied_ranges.append((pos, pos + len(key)))
             # 划掉关键字位置（防止后续重复）
             working = working[:pos] + " " * len(key) + working[pos + len(key):]
-        # 按模板定义顺序输出；数量词识别（念安 8-20「两个灯」多实例）→ 重复该功能
+        # 按模板定义顺序输出；数量词识别（「」多实例）→ 重复该功能
         result = [tid for tid in self._templates if tid in occupied]
         return _expand_quantifiers(text, result)
 
     def _same_peri_family_conflict(self, tid: str, key: str, occupied: set[str]) -> bool:
         """同外设族 + 关键词子串包含 → 当前泛化版让位给更具体的。
 
-        2026-08-17 修复：原判据只看 depends[0] 相同就去重，误伤「点灯+按键」
+        修复：原判据只看 depends[0] 相同就去重，误伤「点灯+按键」
         （同 gpio 族但功能完全不同）。新判据要求**关键词有子串包含关系**
         （「采样」⊂「多通道采样」）才构成泛化→具体，才去重。
         """
@@ -309,10 +309,10 @@ class FunctionalTemplateStore:
         result: dict[str, Any] = {}
         # 外设名（外设文件分组 + hal_msp.c 归属；v2 模板必备，v1 兜底从 depends 推断）
         result["peripheral"] = str(tpl.get("peripheral", "") or "")
-        # 防御需求声明（2026-08-23 念安「按环节绑定」）：功能模板声明这个环节需要哪些
+        # 防御需求声明（「」）：功能模板声明这个环节需要哪些
         # 防御件，组装层按声明注入对应文件——不是全局默认开，是绑到具体环节。
         result["defense"] = ",".join(str(d) for d in (tpl.get("defense", []) or []))
-        # 2026-08-17 MX 范式：init_func/deinit_func 是配置函数名（main 只调用，函数体独立定义）。
+        # MX 范式：init_func/deinit_func 是配置函数名（main 只调用，函数体独立定义）。
         # 可含 ${instance} 占位符（CubeMX 风 MX_USART${uart_instance}_UART_Init），随 init 一起参数化。
         for key in ("init_func", "deinit_func"):
             raw = str(tpl.get(key, "") or "")
@@ -332,18 +332,18 @@ class FunctionalTemplateStore:
                 result[section] = StrTemplate(raw).substitute(filled)
             except KeyError:
                 result[section] = StrTemplate(raw).safe_substitute(filled)
-        # 系统保命声明（念安 2026-08-24「改全面」）：模板声明 system_level=true → loop 是保命逻辑
+        # 系统保命声明（「改全面」）：模板声明 system_level=true → loop 是保命逻辑
         # （看门狗喂狗/系统软复位），组装层据此提升到应用层无条件跑，不被启动门门控。
         # 材料驱动，不再靠 project_slicer 硬编码外设名判断「谁是保命」。
         result["system_level"] = bool(tpl.get("system_level"))
-        # 无源回传 / 有源关闭动作（念安 2026-08-25）：requires_uart（有结果要串口回传）与
+        # 无源回传 / 有源关闭动作：requires_uart（有结果要串口回传）与
         # off（有源器件「关」动作）也透传到 bundle，project_slicer 据此分「无条件区 vs
         # 启动门门控区」——requires_uart 且无 off 的无源回传（RNG/CRC/DMA/定时器/DAC）
         # 上电即回传，不被启动门挡住（自动测试无按键）。
         result["requires_uart"] = bool(tpl.get("requires_uart"))
         result["off"] = str(tpl.get("off", "") or "")
         # 芯片级联（连接效果）：functional 模板也可声明 cascade（宿主 = 同阵营外设），
-        # 与开发板级联共用同一套渲染机制（camp=chip 标识芯片阵营，2026-08-25）。
+        # 与开发板级联共用同一套渲染机制（camp=chip 标识芯片阵营，）。
         cascade = tpl.get("cascade")
         result["cascade"] = cascade
         if cascade:

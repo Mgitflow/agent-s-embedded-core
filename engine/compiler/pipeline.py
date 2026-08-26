@@ -53,7 +53,7 @@ class CompileResult:
     def passed(self) -> bool:
         """真编译是否通过：BUILD 阶段必须真实执行且 passed（fail-closed）。
 
-        2026-08-20 修复（fail-open → fail-closed）：此前逻辑「有执行阶段则 all(passed)」，
+        修复（fail-open → fail-closed）：此前逻辑「有执行阶段则 all(passed)」，
         工具链缺失时 BUILD 被 skipped、但 GENERATE_MAKEFILE 执行成功，executed 非空 →
         all([True])=True，导致「没编译却报编译通过」。现改为：BUILD 未真实执行（skipped）
         即 False——工具链缺失绝不谎报通过。

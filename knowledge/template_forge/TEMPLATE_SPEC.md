@@ -17,7 +17,7 @@ globals   → 塞进全局变量区（init 和 loop 共享的句柄/缓冲/结�
 extra_code → 塞进 USER CODE 区（中断回调等完整函数）
 ```
 
-**核心比喻（念安「汉堡」）**：`完整工程 = 固定框架（面包）+ init/loop/deinit（夹层）+ 收尾`。
+**核心比喻（「」）**：`完整工程 = 固定框架（面包）+ init/loop/deinit（夹层）+ 收尾`。
 框架是 `mx_skeleton.py` 生成的 15 文件标准工程，模板只负责「夹层」。
 
 ---
@@ -68,7 +68,7 @@ extra_code → 塞进 USER CODE 区（中断回调等完整函数）
 
 1. **跨函数变量放 `globals`，绝不放 `init`** —— `init` 塞进 `MX_xxx_Init()`（局部作用域），
    `loop` 塞进 `main()`（另一个作用域）。init 里声明的局部变量，loop 引用会 `undeclared`。
-   （2026-08-22 全模板编译验证揪出：11 个模板踩了这个坑，变量声明从 init 挪到 globals 才修好）
+   （全模板编译验证：11 个模板踩了这个坑，变量声明从 init 挪到 globals 才修好）
 
 2. **句柄 + 数据缓冲 + 结果变量，全部进 `globals`** —— 例如 `uint32_t data[16] = {0};`、
    `uint8_t tx_data[8] = {0};`，init 只做「配置句柄 + HAL_xxx_Init」。

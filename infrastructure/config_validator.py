@@ -145,7 +145,7 @@ def validate_startup(config: dict[str, Any]) -> tuple[bool, list[str]]:
             warnings.append(f"工作区目录不可写: {workspace} ({e})")
             ok = False
 
-    # 5. 芯片 Skill 包检查（2026-08-19 拔插式：从 config.CHIPS_DIR 取）
+    # 5. 芯片 Skill 包检查（拔插式：从 config.CHIPS_DIR 取）
     from infrastructure.config import CHIPS_DIR
 
     chip_skill_dir = Path(CHIPS_DIR) / cfg.chip

@@ -1,6 +1,6 @@
 """规则校验结果（契约层）：单条规则的校验结论。
 
-2026-08-20 下沉：RuleResult 从 engine/rule_engine.py 迁至 contracts，
+下沉：RuleResult 从 engine/rule_engine.py 迁至 contracts，
 使 IRuleEngine.validate 能声明返回 list[RuleResult]（契约强类型）。
 engine 层通过 re-export 兼容旧引用。
 """

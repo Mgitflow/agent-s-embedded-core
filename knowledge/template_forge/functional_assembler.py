@@ -31,7 +31,7 @@ class FunctionalAssembler:
     ) -> dict[str, Any] | None:
         """拼装完整工程代码。
 
-        引脚占位机制（2026-08-09 念安拍板）：单功能路径也走 PinAllocator——
+        引脚占位机制：单功能路径也走 PinAllocator——
         渲染前按模板 PIN_REQUIREMENTS 分配引脚（用户指定优先，肖像兜底），
         缺复用段的模板自动注入 CubeMX 风格 GPIO 段（补全"照着范本打"的
         第五段——句柄/时钟/参数/校验/引脚复用）。
@@ -65,13 +65,13 @@ class FunctionalAssembler:
         tid = self._store.match(text)
         if tid is None:
             return None
-        # 默认值自动填充层（念安 8-21）：识别层 + 电气填数 + 电气默认打底，统一入口
+        # 默认值自动填充层：识别层 + 电气填数 + 电气默认打底，统一入口
         from knowledge.template_forge.param_filler import ParameterFiller
 
         merged = ParameterFiller().fill([tid], params, text)
         return self.assemble(tid, merged)
 
-    # ---- 多功能组合（复杂逻辑核心，2026-08-09 念安拍板） ----
+    # ---- 多功能组合（复杂逻辑核心，） ----
 
     def _render_functional_bundles(
         self,
@@ -84,7 +84,7 @@ class FunctionalAssembler:
     ) -> tuple[list[dict[str, Any]], list[str], list[str]]:
         """渲染 functional 模板 → bundles（引脚占位分配 + 控制关系联动）。
 
-        从 assemble_multi 抽出的 bundle 生成层（2026-08-24 架构重构）：让 board 与
+        从 assemble_multi 抽出的 bundle 生成层（架构重构）：让 board 与
         functional 的 bundle 能统一合并（识别套式混合需求缺陷的根修）。
 
         reserved_pins：预先占用的引脚（board 定型引脚）。functional 的 PinAllocator
@@ -95,7 +95,7 @@ class FunctionalAssembler:
         """
         bundles: list[dict[str, Any]] = []
         used: dict[str, dict[str, Any]] = {}
-        # 默认值自动填充层（念安 8-21「默认值打底 + 精准定位 + 差啥补啥」）：
+        # 默认值自动填充层（「 + 精准定位 + 差啥补啥」）：
         # 识别层抠参数（电气 + 引脚）+ 电气填数 + 电气默认打底（芯片自适应），统一入口。
         from knowledge.template_forge.param_filler import ParameterFiller
 
@@ -106,7 +106,7 @@ class FunctionalAssembler:
             for pin in reserved_pins:
                 allocator.occupy(str(pin), "board")
         conflicts: list[str] = []
-        seen_instances: dict[str, int] = {}  # 实例计数（念安 8-20「两个灯」多实例）
+        seen_instances: dict[str, int] = {}  # 实例计数（「」多实例）
         for tid in template_ids:
             tpl = self._store.get(tid)
             if tpl is None:
@@ -118,7 +118,7 @@ class FunctionalAssembler:
             owner = tid if seen_instances[tid] == 1 else f"{tid}#{seen_instances[tid]}"
             # 每个功能的参数按需取（组合时只取相关前缀参数）
             seg_params = self._slice_params(tid, params)
-            # 同功能多实例显式引脚：列表参数按实例序号拆单值（念安 8-20「两个灯 PA5 和 PA3」）。
+            # 同功能多实例显式引脚：列表参数按实例序号拆单值（「 PA5 和 PA3」）。
             # 第 0 个实例取第 0 个角、第 1 个实例取第 1 个角；实例数多于角数时走默认/池分配。
             inst_idx = seen_instances[tid] - 1
             for _k in list(seg_params):
@@ -131,7 +131,7 @@ class FunctionalAssembler:
             if reqs:
                 seg_params, mux_code, _conf = allocator.resolve_template_pins(tid, seg_params, reqs, owner=owner)
             rendered = self._store.render(tid, seg_params)
-            # ── 控制关系联动（2026-08-09：按键控制点灯 → 真接线）──
+            # ── 控制关系联动（按键控制点灯 → 真接线）──
             # 控制模板（button_read）的 ${btn_action_code} 插槽 = 被控模板动作。
             # 关键：插槽替换必须在**渲染前**（渲染时 safe_substitute 会把缺失
             # 插槽清空），所以直接改 tpl 原始文本再交给 store.render。
@@ -197,11 +197,11 @@ class FunctionalAssembler:
           - init 段：按功能顺序拼接（各自初始化）
           - loop 段：合并进 while(1)（多个功能轮询）
           - deinit 段：按反序拼接（后初始化先收尾）
-        **引脚占位机制**（2026-08-09 念安拍板）：
+        **引脚占位机制**：
           逐功能用 PinAllocator 分配引脚——先分配的先占，后分配的
           自动避让（首选被占 → 下一个候选），杜绝撞车；冲突日志
-          进返回值的 "conflicts"（念安：要标明）。
-        **逻辑关系注入**（2026-08-09 接通 prompt_composer 断点）：
+          进返回值的 "conflicts"（要标明）。
+        **逻辑关系注入**（接通 prompt_composer 断点）：
           relations = {模板: {"controls": [...], "reports": [...]}}
           logic_code = {"a_controls_b": "C 代码片段"}
           识别"按键控制点灯"这类关系 → 控制逻辑注入 loop 段（条件触发）。
@@ -224,7 +224,7 @@ class FunctionalAssembler:
             combined["init"] = "\n".join(str(b["init"]) for b in bundles if b.get("init"))
         if any(b.get("loop") for b in bundles):
             combined["loop"] = "\n".join(str(b["loop"]) for b in bundles if b.get("loop"))
-        # 逻辑关系兜底注入（2026-08-09 复查修正）：
+        # 逻辑关系兜底注入（复查修正）：
         # 只注入**可编译**的逻辑片段——含占位注释（/* xxx 触发条件 */）或
         # 未渲染插槽（${）的伪代码一律丢弃（真接线已在渲染循环内完成）。
         if logic_code:
@@ -263,13 +263,13 @@ class FunctionalAssembler:
         chip: str = DEFAULT_CHIP_NAME,
         project_name: str = "agent_forge_board",
     ) -> dict[str, Any] | None:
-        """开发板简单逻辑模板 → 简化 main.c 工程（念安 8-20「简单逻辑模板」= 快速出活）。
+        """开发板简单逻辑模板 → 简化 main.c 工程（「简单逻辑模板」= 快速出活）。
 
         本方法走 board.json 的简单逻辑模板（定型引脚/有效电平，照开发板手册填），
         渲染成 MX_xxx_Init 函数体 + loop，生成**单文件 main.c**（能编译、能上板跑，
         不拆外设文件）。
 
-        触发（念安 8-20 拍板「复用 chip、不加 board」）：chip → board.json →
+        触发（「复用 chip、不加 board」）：chip → board.json →
         simple_templates → 匹配需求 → 定型代码。非开发板芯片（无简单逻辑模板）→ 返回
         None（调用方回落 functional 通用 / assemble_routed）。
         """
@@ -317,7 +317,7 @@ class FunctionalAssembler:
             "extra_code": simple.get("helpers", ""),
             # 关闭动作（有源器件「关」）：启动门 toggle 到关闭沿时复位（蜂鸣器停/灯灭）
             "off": simple.get("off", ""),
-            # 来源标记（2026-08-25 上板揪出 SPI Flash 读 FF FF FF）：board 定型模板 vs
+            # 来源标记（上板 SPI Flash 读 FF FF FF）：board 定型模板 vs
             # functional 通用模板。board 定型 init 的引脚照手册填死（探索者 SPI1=PB3/PB4/PB5），
             # 组装层据此「直接套用定型 init」、不被 chip_portrait 默认引脚（PA5/PA6/PA7）覆盖。
             "source": "board",
@@ -331,7 +331,7 @@ class FunctionalAssembler:
     ) -> tuple[list[dict[str, Any]], list[str], set[str], list[str]]:
         """渲染 board 模板 → bundles（+ 定型引脚冲突重查 + 板载复用检测）。
 
-        从 assemble_board_multi 抽出的 bundle 生成层（2026-08-24 架构重构）：让 board 与
+        从 assemble_board_multi 抽出的 bundle 生成层（架构重构）：让 board 与
         functional 的 bundle 能统一合并（识别套式混合需求缺陷的根修）。
 
         Returns:
@@ -374,7 +374,7 @@ class FunctionalAssembler:
         if not bundles:
             return [], [], set(), []
 
-        # 开发板复用冲突（pin_zone_view 底座接线，2026-08-21）：组合内模板的定型引脚，
+        # 开发板复用冲突（pin_zone_view 底座接线，）：组合内模板的定型引脚，
         # 若在 board.json 里被多个板载资源复用（跳线/分时切换），告警提示用户注意选择。
         try:
             import json as _json
@@ -404,21 +404,21 @@ class FunctionalAssembler:
     ) -> dict[str, Any] | None:
         """开发板多需求组合（三期「二次开发」）：'点灯+按键+串口' → 多模板段合并 → main.c。
 
-        二次开发（念安 8-20「现有模板基础上插新逻辑 + 冲突重查」）：
+        二次开发（「现有模板基础上插新逻辑 + 冲突重查」）：
         - 多需求识别：match_all_simple 识别文本里的多个功能（更长关键词优先去重）
         - 多模板组合：多个简单逻辑模板的 init/loop 合并进一个 main.c
         - 定型引脚冲突重查：简单逻辑模板引脚定型（照手册填），逐模板提取 init 里的
-          定型引脚，检查是否被前面模板占用——冲突进 conflicts（念安：要标明）。
+          定型引脚，检查是否被前面模板占用——冲突进 conflicts（要标明）。
 
         与 assemble_board_project（单需求）区别：支持多需求；与 assemble_multi
         （functional 通用 + PinAllocator 动态分配）区别：开发板定型引脚只查冲突、
         不动态避让（引脚被开发板定死了，不能换）。
 
-        tids（2026-08-21 念安「A/C 通道顶替」）：显式模板 id 覆盖自动匹配。
+        tids（「A/C 通道顶替」）：显式模板 id 覆盖自动匹配。
         C 通道（LLM 自主设计）由 LLM 判断需求后显式指定 template_ids，脚本按 id
         组合（区别于 B 通道的脚本自动 match_all_simple）；None = 脚本自动识别。
         """
-        # P5 接线（2026-08-22）：用 resolve 严格解析芯片——系列级歧义/未知芯片在此
+        # P5 接线：用 resolve 严格解析芯片——系列级歧义/未知芯片在此
         # fail-closed 报错（不静默回退默认），解析结果规范化后贯穿全链路。
         from infrastructure.chip_gateway import resolve
 
@@ -428,7 +428,7 @@ class FunctionalAssembler:
         if not bundles:
             return None
 
-        # 完整工程（2026-08-22 念安「业务层也要外设独立文件 + MSP 回调」）：
+        # 完整工程（「业务层也要外设独立文件 + MSP 回调」）：
         # bundles → bundles_to_project_slices → build_standard_project，对外直接返回
         # 标准 CubeMX 完整工程（14 文件：外设独立 gpio.c/usart.c + hal_msp.c + startup + linker），
         # 不再是「业务层 main.c 单文件」（单文件只在 compile_check 内部临时生成）。
@@ -450,7 +450,7 @@ class FunctionalAssembler:
     def identify_routines(self, text: str, chip: str = DEFAULT_CHIP_NAME) -> dict[str, Any]:
         """识别套式（三期第三步，最高层）：识别需求 → 路由模板 → 缺啥补啥报告。
 
-        念安 8-20 三期顺序「引脚分区 → 二次开发 → 识别套式」，识别套式是最高层调度，
+         三期顺序「引脚分区 → 二次开发 → 识别套式」，识别套式是最高层调度，
         依赖二次开发的多模板组合能力（引脚分区为底座）。
 
         返回：
@@ -466,7 +466,7 @@ class FunctionalAssembler:
         board_templates = resolve_board_simple(chip)
         board_matched = match_all_simple(text, board_templates) if board_templates else []
 
-        # 级联解析（2026-08-24 念安「全局初始化 vs 特殊逻辑」）：
+        # 级联解析（「全局初始化 vs 特殊逻辑」）：
         # 级联模板（cascade 字段）是「特殊逻辑」，不独立成功能，须级联到提供
         # cascade.reads 变量的宿主模板（outputs 含该变量）上。宿主不在场 →
         # fail-closed 报缺宿主（级联单元 loop 引用未声明全局变量会编译失败，不能静默）。
@@ -514,7 +514,7 @@ class FunctionalAssembler:
             if tpl is None:
                 continue
             tpl_kws = {kw.strip().lower() for kw in tpl.get("keywords", [])}
-            # 去重（2026-08-24 对称面补全）：board_simple.match_all_simple 用「短关键词
+            # 去重（对称面补全）：board_simple.match_all_simple 用「短关键词
             # 被更长关键词包含 → 跳过」规则，此处 functional 去重原本只用「精确交集」
             # （tpl_kws & board_kws），两层规则不一致 → 「指示灯」命中 board led_indicator，
             # 但 functional led_blink 的「灯」因「灯」∉{指示灯...} 漏网，生成多余的
@@ -524,7 +524,7 @@ class FunctionalAssembler:
                 continue  # board 已覆盖（关键词被包含 = 同功能）
             fallback.append(tid)
 
-        # 对称面去重（2026-08-25 上板揪出）：「adc 多通道」同时命中 board adc_read
+        # 对称面去重（上板）：「adc 多通道」同时命中 board adc_read
         # （宽泛 match「adc」）和 functional adc_dma_scan（精确「adc 多通道」）→ 两个
         # ADC 模板都渲染 → adc_gpio 局部变量重复定义、编译失败。
         # 根修：functional 命中了「同外设、更精确」的模板（functional 词真包含 board
@@ -554,7 +554,7 @@ class FunctionalAssembler:
                 board_keep.append(tid)
             board_matched = board_keep
 
-        # 自动带串口（functional requires_uart，对齐 board 的 match_all_simple 机制，2026-08-24）：
+        # 自动带串口（functional requires_uart，对齐 board 的 match_all_simple 机制，）：
         # 命中的 functional 模板声明 requires_uart（有结果要回传，如 rtc_calendar/adc_read/i2c_scan），
         # 自动附加 uart_print，让读到的结果能串口打出来、上板能看见——不靠用户手动组合「+ 串口打印」。
         if "uart_print" not in fallback and "uart_print" not in board_ids:
@@ -564,7 +564,7 @@ class FunctionalAssembler:
                     fallback.append("uart_print")
                     break
 
-        # 控制关系识别（2026-08-21 prompt_composer 接线，消灭孤岛）：
+        # 控制关系识别（prompt_composer 接线，消灭孤岛）：
         # 「按键控制点灯」这类复合需求，识别控制/上报关系，注入 functional 补缺分支。
         relations: dict[str, Any] = {}
         try:
@@ -599,21 +599,21 @@ class FunctionalAssembler:
         3. board 缺、functional 有 → assemble_multi（通用补缺）
         4. 都没有 → 返回缺失报告（missing，不静默失败）
 
-        chip 语义（2026-08-25 念安定调「降级处理」）：
+        chip 语义（「降级处理」）：
         - 指定 chip → resolve 严格校验 + 贴芯片画像（引脚/AF/时钟）= 完整工程。
         - 没指定 chip（None/空串）→ 纯通用降级：不 resolve 具体芯片，返回「纯通用」
           模板（functional 通用，芯片特有引脚/AF/时钟不贴）。搜寻逻辑的降级——没搜到
           芯片就不贴芯片特有。
 
-        tids（2026-08-21 念安「A/C 通道顶替」）：显式模板 id 透传给 assemble_board_multi，
+        tids（「A/C 通道顶替」）：显式模板 id 透传给 assemble_board_multi，
         C 通道 LLM 指定模板时用；None = 脚本自动识别（B 通道）。
         """
-        # 纯通用降级（2026-08-25 念安定调）：没指定芯片/板子 → 不 resolve 具体芯片，
+        # 纯通用降级：没指定芯片/板子 → 不 resolve 具体芯片，
         # 返回「纯通用」模板（functional 通用，芯片特有引脚/AF/时钟不贴）。
         if not chip:
             return self._assemble_generic(text, project_name)
 
-        # P5 接线（2026-08-22）：入口 resolve 严格校验——系列级歧义/未知芯片在此 fail-closed，
+        # P5 接线：入口 resolve 严格校验——系列级歧义/未知芯片在此 fail-closed，
         # 替代 identify_routines/get_profile 的宽松回退（"未找到芯片画像，使用默认"静默降级）。
         from infrastructure.chip_gateway import resolve
 
@@ -624,7 +624,7 @@ class FunctionalAssembler:
         relations = routines.get("relations") or {}
         cascade_conflicts = routines.get("cascade_conflicts") or []
 
-        # 架构重构（2026-08-24 念安「混合需求 functional 被漏」根修）：
+        # 架构重构（「混合需求 functional 被漏」根修）：
         # 旧逻辑「board 命中就 return，functional 补缺被忽略」→ 改为 board + functional
         # bundles 合并后统一生成标准工程。functional 渲染时预占 board 定型引脚（reserved_pins），
         # 让 PinAllocator 自动避让，杜绝 board/functional 引脚撞车——架构协调，非打补丁。
@@ -643,7 +643,7 @@ class FunctionalAssembler:
             conflicts.extend(board_conflicts)
 
         if fallback:
-            # 控制关系联动（2026-08-21 prompt_composer 接线）：按键控制点灯 → 控制逻辑注入 loop
+            # 控制关系联动（prompt_composer 接线）：按键控制点灯 → 控制逻辑注入 loop
             func_bundles, func_ids, func_conflicts = self._render_functional_bundles(
                 text, chip, fallback, relations=relations, reserved_pins=occupied_pins
             )
@@ -665,7 +665,7 @@ class FunctionalAssembler:
                 "missing": f"未识别到可用模板覆盖的需求：{text[:60]}",
             }
 
-        # 完整工程（2026-08-22 念安「业务层也要外设独立文件 + MSP 回调」）：
+        # 完整工程（「业务层也要外设独立文件 + MSP 回调」）：
         # board + functional 合并后统一走 bundles_to_project_slices → build_standard_project，
         # 对外返回标准 CubeMX 完整工程。
         from knowledge.loaders.mx_skeleton import MxSkeleton
@@ -688,7 +688,7 @@ class FunctionalAssembler:
         }
 
     def _assemble_generic(self, text: str, project_name: str) -> dict[str, Any]:
-        """纯通用降级（念安 2026-08-25 定调）：没指定芯片/板子 → 不 resolve 具体芯片。
+        """纯通用降级：没指定芯片/板子 → 不 resolve 具体芯片。
 
         返回「纯通用」模板：functional 通用模板，芯片特有参数（引脚/AF/时钟）不贴，
         用模板默认值/占位符。搜寻逻辑的降级——没搜到芯片，就不贴芯片特有。
@@ -726,7 +726,7 @@ class FunctionalAssembler:
     def _render_with_template(self, tpl: dict[str, Any], params: dict[str, Any]) -> dict[str, Any]:
         """用外部模板对象渲染（控制联动改过插槽后，绕过 store 缓存）。
 
-        2026-08-09：${btn_action_code} 这类联动插槽必须在渲染前替换，
+        ：${btn_action_code} 这类联动插槽必须在渲染前替换，
         渲染后 safe_substitute 会把缺失插槽清空，无处可填。
         """
         from string import Template as StrTemplate
@@ -772,7 +772,7 @@ class FunctionalAssembler:
 
     @staticmethod
     def _render_main_c(bundles: list[dict[str, Any]], chip: str = "") -> str:
-        """单文件 main.c：generate_main_c 骨架 + 函数体塞 USER CODE 4（2026-08-18 删硬编码后统一）。
+        """单文件 main.c：generate_main_c 骨架 + 函数体塞 USER CODE 4（删硬编码后统一）。
 
         用 generate_main_c 骨架（PLL 从 profile 读，跨芯片正确）+ 函数体塞 USER CODE 4，
         保证健康检查（check_main_c / must_calls）兼容。

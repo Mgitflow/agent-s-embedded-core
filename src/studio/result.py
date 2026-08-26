@@ -38,7 +38,7 @@ class SkillResult:
         """快捷构造失败结果。
 
         注意：命名 fail 而非 error——避免与 dataclass 字段 error 同名冲突
-        （2026-08-05 修复：同名时字段默认值不生效，result.error 会访问到 classmethod）。
+        （修复：同名时字段默认值不生效，result.error 会访问到 classmethod）。
         """
         return cls(ok=False, error=message, status=status)
 

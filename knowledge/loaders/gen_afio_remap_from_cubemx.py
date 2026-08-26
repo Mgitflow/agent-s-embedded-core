@@ -1,6 +1,6 @@
 """从 CubeMX GPIO IP 定义提取 f103 的 AFIO 重映射表（remap_map.json 材料源）。
 
-念安 2026-08-25「F103 AFIO 重映射」遗漏：F1 系列没有每个引脚的 AF 编号（AF0-AF15），
+「F103 AFIO 重映射」遗漏：F1 系列没有每个引脚的 AF 编号（AF0-AF15），
 外设引脚复用靠 AFIO_MAPR 寄存器做「重映射（remap）」——外设有默认映射引脚组，
 通过重映射位切换到另一组引脚。CubeMX 的 mcu 引脚数据库（db/mcu/STM32F103C(8-B)Tx.xml）
 只列「哪些引脚有某信号」，不区分默认/重映射；真正的重映射语义在 GPIO IP 定义
@@ -125,7 +125,7 @@ def derive_default_pins(
 ) -> dict[str, dict[str, str]]:
     """从 remap_map + full_af_map 提炼 default_pins（外设 → {role: 默认引脚}）。
 
-    念安 2026-08-25「default_pins 手工维护 → 自动提炼」：f103 的默认引脚是硬件决定的
+    「default_pins 手工维护 → 自动提炼」：f103 的默认引脚是硬件决定的
     （AFIO 默认映射），remap_map 里有权威数据，可完全自动提炼，不再手工维护（手写照搬
     易错，如 g431 I2C 照搬 f407）。
 
