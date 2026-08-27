@@ -1094,9 +1094,10 @@ class MxSkeleton(IMxSkeleton):
 
         # 探针注入（可选，「闭环」最后一公里）
         if enable_trace:
+            from serial_workshop.probes.expectations import build_expectations
+
             from infrastructure.config import CHIPS_DIR
             from knowledge.template_forge.trace_injector import apply_trace
-            from serial_workshop.probes.expectations import build_expectations
 
             chip_name = str(getattr(self.profile, "chip_name", ""))
             exp = build_expectations(chip_name, CHIPS_DIR)

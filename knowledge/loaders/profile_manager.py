@@ -207,8 +207,13 @@ class ProfileManager(IProfileManager):
             try:
                 from knowledge.reserve import fcnt as _fcnt_module
                 self._fcnt = _fcnt_module.load()
-            except (KnowledgeIOError, OSError, json.JSONDecodeError, ImportError) as e:
-                # ImportError = 开源仓无 knowledge.reserve（内容护城河留本地）：FCNT 不加载，画像仍可用
+            except ImportError:
+                # 开源仓剥离 knowledge.reserve（内容护城河留本地）：FCNT 是可选 enrichment，
+                # 不加载也不影响确定性骨架——降级 debug，不打扰用户（此前 warning 会让
+                # 开源用户跑 self_check 时误以为「有错误」）。
+                logger.debug("开源仓已剥离知识护城河（knowledge.reserve），跳过 FCNT enrichment")
+            except (KnowledgeIOError, OSError, json.JSONDecodeError) as e:
+                # 有 reserve 但加载失败 = 真实错误，才 warning
                 logger.warning(f"自动加载 FCNT 失败: {e}")
 
         # 3. 用 FCNT enrich 匹配的芯片画像，并将其设为默认
@@ -223,8 +228,16 @@ class ProfileManager(IProfileManager):
         logger.info(f"ProfileManager: 已加载 {len(self._profiles)} 个芯片画像: {list(self._profiles.keys())}")
 
     def _scan_skill_packages(self) -> None:
-        """扫描 skills/chips/* 下的芯片 Skill 包，读取 profile.json。"""
-        skills_root = Path(__file__).parent.parent.parent / "skills" / "chips"
+        """扫描 chips/* 下的芯片 Skill 包，读取 profile.json。
+
+        chips 根目录走抽象接口（AB 门）：环境变量 AGENT_S_CHIPS_DIR 可替换为候选/临时材料，
+        默认 skills/chips——与 chip_gateway._chips_dir / chip_portrait_adapter._default_chips_dir
+        同源同机制。
+        """
+        import os
+
+        default_root = Path(__file__).parent.parent.parent / "skills" / "chips"
+        skills_root = Path(os.environ.get("AGENT_S_CHIPS_DIR", str(default_root)))
         if not skills_root.exists():
             return
 

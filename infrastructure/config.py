@@ -15,8 +15,12 @@ from infrastructure.chip_gateway import default_chip as _gateway_default_chip  #
 _gateway_default = _gateway_default_chip()
 ACTIVE_CHIP = os.environ.get("AGENT_S_CHIP", _gateway_default)
 DEFAULT_CHIP_NAME = os.environ.get("AGENT_S_CHIP_NAME", _gateway_default.upper())
-CHIP_SKILL_DIR = str(PROJECT_ROOT / "skills" / "chips" / ACTIVE_CHIP)
-CHIP_MANIFEST = str(PROJECT_ROOT / "skills" / "chips" / ACTIVE_CHIP / "manifest.yaml")
+
+# 芯片肖像根（抽象接口，AB 门）：AGENT_S_CHIPS_DIR 可整体替换为候选/临时材料，
+# 默认项目内 skills/chips。CHIP_SKILL_DIR/CHIP_MANIFEST/CHIPS_DIR 全部走它。
+_CHIPS_ROOT = Path(os.environ.get("AGENT_S_CHIPS_DIR", str(PROJECT_ROOT / "skills" / "chips")))
+CHIP_SKILL_DIR = str(_CHIPS_ROOT / ACTIVE_CHIP)
+CHIP_MANIFEST = str(_CHIPS_ROOT / ACTIVE_CHIP / "manifest.yaml")
 
 
 # config/settings.yaml 统一读取入口（server / assembly 共用，避免循环依赖与重复读取）
@@ -53,7 +57,7 @@ def get_chip_config(chip_name: str | None = None) -> dict[str, Any]:
     # 与 ACTIVE_CHIP 默认 "apm32f407vgt6" 分叉 → 默认环境 get_chip_config() 返回空 dict
     # → fcnt 芯片 Skill 包静默加载失败。统一单一默认值。
     active = chip_name or ACTIVE_CHIP
-    current_manifest = str(PROJECT_ROOT / "skills" / "chips" / active / "manifest.yaml")
+    current_manifest = str(_CHIPS_ROOT / active / "manifest.yaml")
     if chip_name is None and _chip_config_cache is not None and CHIP_MANIFEST == current_manifest:
         return _chip_config_cache
     import yaml
@@ -64,7 +68,7 @@ def get_chip_config(chip_name: str | None = None) -> dict[str, Any]:
             config = yaml.safe_load(f) or {}
     if chip_name is None:
         CHIP_MANIFEST = current_manifest
-        CHIP_SKILL_DIR = str(PROJECT_ROOT / "skills" / "chips" / active)
+        CHIP_SKILL_DIR = str(_CHIPS_ROOT / active)
         _chip_config_cache = config
     return config
 
@@ -72,7 +76,7 @@ def get_chip_config(chip_name: str | None = None) -> dict[str, Any]:
 def get_chip_skill_dir(chip_name: str | None = None) -> str:
     """获取指定芯片的 Skill 包目录。不传则使用当前 AGENT_S_CHIP。"""
     active = chip_name or ACTIVE_CHIP  # 统一默认（此前 "stm32f407" 不存在）
-    return str(PROJECT_ROOT / "skills" / "chips" / active)
+    return str(_CHIPS_ROOT / active)
 
 
 def get_chip_standards_dir(chip_name: str | None = None) -> str:
@@ -178,7 +182,7 @@ def get_standard_paths(chip_name: str | None = None) -> dict[str, str]:
     """获取指定芯片的标准路径（延迟构建）。"""
     global _STANDARD_PATHS_CACHE
     active = chip_name or ACTIVE_CHIP
-    base = PROJECT_ROOT / "skills" / "chips" / active / "standards"
+    base = _CHIPS_ROOT / active / "standards"
     paths = _discover_standard_paths(base)
     if chip_name is None:
         _STANDARD_PATHS_CACHE = paths

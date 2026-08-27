@@ -9,8 +9,20 @@ from typing import Any, cast
 
 _log = logging.getLogger(__name__)
 
-# 芯片肖像目录（skills/chips/）——parents[2]=项目根
-_CHIPS_DIR = Path(__file__).resolve().parents[2] / "skills" / "chips"
+
+def _default_chips_dir() -> Path:
+    """chips 根目录（抽象接口，可切换 = AB 门）。
+
+    - 显式传 chips_dir 参数 → 用参数（优先级最高）
+    - 环境变量 AGENT_S_CHIPS_DIR → 用候选/临时材料（回流门 B）
+    - 都无 → 默认 skills/chips（正常门 A）
+
+    与 config.CHIPS_DIR / chip_gateway._chips_dir 同源同机制，不硬编码。
+    """
+    import os
+
+    default = Path(__file__).resolve().parents[2] / "skills" / "chips"
+    return Path(os.environ.get("AGENT_S_CHIPS_DIR", str(default)))
 
 # 默认芯片（统一：与 chip_gateway._DEFAULT_CHIP / config.DEFAULT_CHIP_NAME 对齐，
 # 主开发板=探索者 stm32f407zgt6。此前 apm32f407vgt6 是最小系统板，导致 block_assembler
@@ -54,7 +66,7 @@ class ChipPortraitAdapter:
     """芯片肖像适配器：af_map/standards/profile → 模板参数自动补全。"""
 
     def __init__(self, chips_dir: Path | str | None = None, chip: str | None = None) -> None:
-        self._chips_dir = Path(chips_dir or _CHIPS_DIR)
+        self._chips_dir = Path(chips_dir or _default_chips_dir())
         self._chip = chip or DEFAULT_CHIP
         self._af_map: dict[str, Any] = {}
         self._profile: dict[str, Any] = {}
@@ -325,7 +337,7 @@ class ChipPortraitAdapter:
 
     def is_analog_signal(self, signal: str) -> bool:
         """信号是否为模拟输入（ADC/DAC）——引脚复用用 GPIO_MODE_ANALOG 而非 AF。"""
-        return signal.startswith("ADC") or signal.startswith("DAC") or signal.startswith("VREF")
+        return signal.startswith(("ADC", "DAC", "VREF"))
 
     def find_peripheral_pins(self, peripheral: str, instance: str) -> list[str]:
         """按外设+实例查全部可用引脚（TIM1 → TIM1_CH1/CH2/...）。"""
