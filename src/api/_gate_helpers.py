@@ -67,7 +67,7 @@ def _get_server_config() -> tuple[str, int, str]:
     return str(host), int(port), token
 
 def _get_shared_ui_dir() -> Path:
-    """公共 UI 目录：环境变量 > config 统一默认（集中化，不再写死 E:/Code）。"""
+    """公共 UI 目录：环境变量 > config 统一默认（集中化，不写死本机路径）。"""
     env_dir = os.environ.get("AGENT_SHARED_UI_DIR")
     if env_dir:
         return Path(env_dir)

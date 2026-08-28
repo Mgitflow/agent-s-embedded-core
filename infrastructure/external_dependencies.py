@@ -104,47 +104,12 @@ def _build_external_sources() -> dict[str, dict[str, Any]]:
 EXTERNAL_SOURCES: dict[str, dict[str, Any]] = _build_external_sources()
 
 # 项目内已有（非外部搬迁，而是项目自建的知识资产）
+# 开源骨架只夹带 mx_skeleton 模板引擎这一项自建资产；其余知识资产（芯片肖像、
+# 功能模板、手册数据、电气数据）属护城河，不随骨架开源。
 INTERNAL_ASSETS = {
-    "fcnt_series_base": {
-        "path": "knowledge/reserve/fcnt/series/f4_series_base.json",
-        "description": "F4 系列通用框架画像（共性：核心族/外设族/总线/时钟模型）",
-    },
-    "fcnt_chip": {
-        "path": "skills/chips/apm32f407vgt6/",
-        "description": "APM32F407VGT6 具体型号画像（profile.json=时钟/NVIC/DMA + af_map.json + pin_map.json + handbook.json）",
-        "built_from": "APM32F407 datasheet + RM0090 + STM32F4 HAL",
-    },
-    "fcnt_handbook": {
-        "path": "knowledge/reserve/fcnt/fcnt_handbook.json",
-        "description": "STM32F407 开发手册与规范（Agent-S 正式知识源）",
-    },
-    "fcnt_patterns": {
-        "path": "knowledge/reserve/fcnt/fcnt_patterns.json",
-        "description": "STM32F407 HAL 代码模式库",
-    },
-    "hal_patterns": {
-        "path": "knowledge/hal_patterns.json",
-        "description": "HAL 库代码模式（从官方 HAL 库提取）",
-    },
     "mx_skeleton": {
         "path": "knowledge/loaders/mx_skeleton.py",
         "description": "MX 模板引擎（基于官方 MX 模板构建）",
-    },
-    "af_reverse": {
-        "path": "knowledge/loaders/af_reverse.py",
-        "description": "af_map 自动反推工具（从 pin_map 生成反向映射）",
-    },
-    "peripheral_standards": {
-        "path": "knowledge/reserve/standards/",
-        "description": "外设编码标准（gpio/tim/uart/adc/spi/i2c/dma）",
-    },
-    "chip_params": {
-        "path": "knowledge/dynamic/chip_params.json",
-        "description": "芯片参数配置（待迁入 beaker）",
-    },
-    "reflux": {
-        "path": "knowledge/reflux/",
-        "description": "知识回流三通道（verified/mismatch/error）",
     },
 }
 

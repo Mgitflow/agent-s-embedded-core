@@ -217,13 +217,12 @@ SAVE = {
     "extension": ".c",
 }
 
-# ========== v2.1.0 Reference: 外部 HAL/CMSIS/模板文件 ==========
-# reference（28 万行 STM32 HAL 库）移出主仓库，
-# 作为本地附属库位于 E:/Code/reference-stm32f4/（环境变量 S_REFERENCE_DIR 可覆盖）
-# 芯片数据扩充（F103/G431）：HAL 库按芯片系列分区
-#   - F1 → E:/Code/reference-stm32f1/（环境变量 S_REFERENCE_DIR_F1）
-#   - F4 → E:/Code/reference-stm32f4/（环境变量 S_REFERENCE_DIR，默认）
-#   - G4 → E:/Code/reference-stm32g4/（环境变量 S_REFERENCE_DIR_G4）
+# ========== Reference: 外部 HAL/CMSIS/模板文件 ==========
+# reference（STM32 HAL 库）移出主仓库，作为外部附属库，路径可注入：
+#   - F1 → 环境变量 S_REFERENCE_DIR_F1
+#   - F4 → 环境变量 S_REFERENCE_DIR（默认）
+#   - G4 → 环境变量 S_REFERENCE_DIR_G4
+#   默认相对项目父目录的 reference-stm32f<x>/，clone 到任意位置不指向本机路径。
 #   缺库的系列：生成仍可用（Makefile/源码/链接脚本），编译阶段明确 skipped 标注缺库。
 _REFERENCE_DIRS: dict[str, Path] = {
     "F1": Path(os.environ.get("S_REFERENCE_DIR_F1", str(PROJECT_ROOT.parent / "reference-stm32f1"))),
@@ -254,15 +253,15 @@ REFERENCE_TEMPLATES_SRC = str(Path(REFERENCE_DIR) / "templates" / "Src")
 
 # ═══════════════════════════════════════════
 # 外部组件路径（集中化：open-core 拔插式）
-# 此前「共享知识库根 / 公共 UI 目录」散落 5 处各自硬编码默认值（E:/Code/shared_knowledge、
-# E:/Code/agent-c-chamber/shared/ui），开源后别人 clone 不设环境变量会报路径不存在。
+# 此前「共享知识库根 / 公共 UI 目录」散落多处各自硬编码默认值，
+# 开源后别人 clone 不设环境变量会报路径不存在。
 # 统一收敛到这里，各散落点 import config 引用，不再各自写死默认值。
 # 这些是「外部组件」（数据库/共享UI），是 open-core 拆分的边界：骨架只留接口，
 # 组件可插拔（换路径 / 换实现），核心数据不随仓库走。
 # ═══════════════════════════════════════════
 
 # 共享知识库根（组织共享：S 细化产物归入，其他链路共享）
-# 默认不再写死 E:/Code，改为「相对项目父目录的 shared_knowledge/」——开源后 clone 到
+# 默认不写死本机路径，改为「相对项目父目录的 shared_knowledge/」——开源后 clone 到
 # 任意位置，不设 AGENT_SHARED_KB 也不会指向作者本机路径。
 SHARED_KB_ROOT = Path(os.environ.get(
     "AGENT_SHARED_KB",

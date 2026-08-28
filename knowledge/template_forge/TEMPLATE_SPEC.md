@@ -85,24 +85,13 @@ extra_code → 塞进 USER CODE 区（中断回调等完整函数）
 
 ---
 
-## 四、怎么新加一个模板（4 步）
+## 四、怎么新加一个模板（3 步）
 
 1. **写 JSON**：在 `forge_templates/functional/<id>.json` 按上面结构写（照抄一个同类模板最快）。
 
-2. **登记工艺契约**：`process_contract.py` 的 `PROCESS_CONTRACT` 加一条——
-   ```python
-   "<id>": { "must_calls": ["HAL_xxx_Init", "HAL_xxx_xxx"], "peripheral": "XXX", "desc": "..." }
-   ```
-   （`must_calls` = 这个功能「必须出现」的 HAL 调用，工艺监测器据此校验）
+2. **识别验证**：`python examples/run_example.py` —— 新词命中即识别成功（长词优先）。
 
-3. **同步共享库**：`cp forge_templates/functional/<id>.json <共享库>/chip_portraits/<芯片>/templates/`
-
-4. **验证编译**：
-   ```bash
-   python scripts/forge_all_templates_check.py --only <id>   # 单个
-   python scripts/forge_all_templates_check.py              # 全量 27 个
-   python scripts/forge_health_check.py                     # 健康巡查（含工艺契约/同步）
-   ```
+3. **编译验证**（需工具链）：`python scripts/build_flash.py "你的关键词" --no-flash` —— 生成 + 真编译。
 
 ---
 
@@ -110,7 +99,6 @@ extra_code → 塞进 USER CODE 区（中断回调等完整函数）
 
 | 命令 | 验证什么 |
 |---|---|
-| `python scripts/forge_all_templates_check.py` | 27 个模板逐个真编译（按 id 直接组装，绕过 match 歧义） |
-| `python scripts/forge_health_check.py` | 健康巡查（模板数/工艺契约/知识库同步/真编译） |
-| `python scripts/compile_check.py "点灯"` | 识别套式端到端（自然语言 → 真编译 elf/hex/bin） |
-| `python scripts/blueprint_reconcile.py` | 三层对账（功能区块 + 文件 + 预计效果） |
+| `python scripts/self_check.py` | 骨架自检（契约 / 106 校验 / 模块 import / 空车跑通） |
+| `python examples/run_example.py` | 最小示例（「点灯」→ 18 文件完整工程） |
+| `python scripts/build_flash.py "点灯"` | 一条龙（生成 → 编译 → 烧录，需工具链） |

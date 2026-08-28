@@ -1,4 +1,4 @@
-"""HAL 库解析器：从外部 26 万行 HAL 库正则解析每个外设的 API 骨架（句柄/Init 字段/函数签名/宏），输出 JSON 供资源适配（resource_adapter）消费。"""
+"""HAL 库解析器：从外部 HAL 库正则解析每个外设的 API 骨架（句柄/Init 字段/函数签名/宏），输出 JSON 供模板拼装消费。"""
 
 from __future__ import annotations
 
